@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" role="img" aria-labelledby="ls-title ls-desc" id="line-layout">
+  <title id="ls-title">Demo Plant floor plan</title>
+  <desc id="ls-desc">Top-down view of Lines 1 to 3. Each line has four machines: M1 Feeder, M2 Dryer, M3 Molding, M4 Inspection.</desc>
+  <!--
+    LineSleuth line layout (Dana, 2026-09-24). Spec: docs/design/ui-spec.md section 3.2
+    Usage: INLINE this SVG in the page (not <img>), so JS can change classes.
+      Machine group : <g id="L{line}-M{n}" class="machine is-normal">
+      Machine state : <text id="L{line}-M{n}-state">RUNNING</text>  (update text together with class)
+      Lane status   : <text id="L{line}-status">Running</text>
+      Valve on M3   : <g id="L{line}-M3-CV{line}" class="valve">     (add "is-fault" when cited)
+    State classes   : is-normal | is-warn | is-stopped | is-idle ; add "is-focus" while investigating
+    Lane classes    : lane | lane is-stopped
+    Colors use CSS variables from ui-spec.md with hard-coded fallbacks.
+  -->
+  <style>
+    .lane-bg { fill: var(--color-surface-1, #171A21); stroke: var(--color-border, #2E3440); stroke-width: 2; }
+    .lane.is-stopped .lane-bg { stroke: var(--machine-stopped, #F2555A); stroke-width: 2; }
+    .lane-name { fill: var(--color-text-primary, #E8EAED); font: 700 24px Inter, system-ui, sans-serif; letter-spacing: 0.04em; }
+    .lane-status { fill: var(--color-text-secondary, #A3AAB8); font: 500 18px Inter, system-ui, sans-serif; }
+    .lane.is-stopped .lane-status { fill: var(--machine-stopped, #F2555A); font-weight: 700; }
+    .conveyor { fill: var(--color-surface-3, #282D38); }
+    .flow { fill: var(--color-text-muted, #8A93A3); }
+
+    .machine .body { fill: var(--machine-body, #1F232C); stroke: var(--machine-stroke, #4A5263); stroke-width: 2; }
+    .machine .led { fill: var(--machine-normal, #3DD68C); }
+    .machine .name { fill: var(--color-text-primary, #E8EAED); font: 600 20px Inter, system-ui, sans-serif; }
+    .machine .mid { fill: var(--color-text-secondary, #A3AAB8); font: 500 16px Inter, system-ui, sans-serif; }
+    .machine .state { fill: var(--machine-normal, #3DD68C); font: 700 18px Inter, system-ui, sans-serif; letter-spacing: 0.06em; }
+    .machine .focus { display: none; fill: none; stroke: var(--machine-focus, #5AA9FF); stroke-width: 3; stroke-dasharray: 10 6; }
+
+    .machine.is-warn .body { stroke: var(--machine-warn, #F5A524); stroke-width: 3; }
+    .machine.is-warn .led, .machine.is-warn .state { fill: var(--machine-warn, #F5A524); }
+
+    .machine.is-stopped .body { fill: var(--machine-stopped-bg, #2A1618); stroke: var(--machine-stopped, #F2555A); stroke-width: 4; }
+    .machine.is-stopped .led, .machine.is-stopped .state { fill: var(--machine-stopped, #F2555A); }
+
+    .machine.is-idle .body { stroke: var(--machine-idle, #6B7280); stroke-dasharray: 6 4; }
+    .machine.is-idle .led, .machine.is-idle .state { fill: var(--machine-idle, #6B7280); }
+    .machine.is-idle .state { fill: var(--color-text-secondary, #A3AAB8); }
+
+    .machine.is-focus .focus { display: inline; }
+
+    .valve .icon { fill: var(--color-text-muted, #8A93A3); }
+    .valve .label { fill: var(--color-text-secondary, #A3AAB8); font: 500 14px Inter, system-ui, sans-serif; }
+    .valve.is-fault .icon { fill: var(--machine-stopped, #F2555A); }
+    .valve.is-fault .label { fill: var(--machine-stopped, #F2555A); font-weight: 700; }
+  </style>
+
+  <defs>
+    <polygon id="flow-arrow" points="0,-8 12,0 0,8"/>
+  </defs>
+
+  <!-- ================= LINE 1 ================= -->
+  <g id="L1" class="lane" transform="translate(0,20)">
+    <rect class="lane-bg" x="20" y="0" width="1160" height="180" rx="12"/>
+    <text class="lane-name" x="40" y="82">LINE 1</text>
+    <text id="L1-status" class="lane-status" x="40" y="110">Running</text>
+    <rect class="conveyor" x="160" y="85" width="1000" height="10" rx="5"/>
+    <use href="#flow-arrow" class="flow" x="400" y="90"/>
+    <use href="#flow-arrow" class="flow" x="650" y="90"/>
+    <use href="#flow-arrow" class="flow" x="900" y="90"/>
+    <use href="#flow-arrow" class="flow" x="1146" y="90"/>
+
+    <g id="L1-M1" class="machine is-normal" transform="translate(180,22)" aria-label="Line 1 M1 Feeder: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Feeder</text>
+      <text class="mid" x="16" y="60">L1-M1</text>
+      <text id="L1-M1-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+    <g id="L1-M2" class="machine is-normal" transform="translate(430,22)" aria-label="Line 1 M2 Dryer: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Dryer</text>
+      <text class="mid" x="16" y="60">L1-M2</text>
+      <text id="L1-M2-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+    <g id="L1-M3" class="machine is-normal" transform="translate(680,22)" aria-label="Line 1 M3 Molding: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Molding</text>
+      <text class="mid" x="16" y="60">L1-M3</text>
+      <text id="L1-M3-state" class="state" x="16" y="104">RUNNING</text>
+      <g id="L1-M3-CV1" class="valve" transform="translate(16,130)">
+        <polygon class="icon" points="0,0 0,16 10,8"/>
+        <polygon class="icon" points="20,0 20,16 10,8"/>
+        <text class="label" x="28" y="14">CV-1 valve</text>
+      </g>
+    </g>
+    <g id="L1-M4" class="machine is-normal" transform="translate(930,22)" aria-label="Line 1 M4 Inspection: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Inspection</text>
+      <text class="mid" x="16" y="60">L1-M4</text>
+      <text id="L1-M4-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+  </g>
+
+  <!-- ================= LINE 2 ================= -->
+  <g id="L2" class="lane" transform="translate(0,230)">
+    <rect class="lane-bg" x="20" y="0" width="1160" height="180" rx="12"/>
+    <text class="lane-name" x="40" y="82">LINE 2</text>
+    <text id="L2-status" class="lane-status" x="40" y="110">Running</text>
+    <rect class="conveyor" x="160" y="85" width="1000" height="10" rx="5"/>
+    <use href="#flow-arrow" class="flow" x="400" y="90"/>
+    <use href="#flow-arrow" class="flow" x="650" y="90"/>
+    <use href="#flow-arrow" class="flow" x="900" y="90"/>
+    <use href="#flow-arrow" class="flow" x="1146" y="90"/>
+
+    <g id="L2-M1" class="machine is-normal" transform="translate(180,22)" aria-label="Line 2 M1 Feeder: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Feeder</text>
+      <text class="mid" x="16" y="60">L2-M1</text>
+      <text id="L2-M1-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+    <g id="L2-M2" class="machine is-normal" transform="translate(430,22)" aria-label="Line 2 M2 Dryer: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Dryer</text>
+      <text class="mid" x="16" y="60">L2-M2</text>
+      <text id="L2-M2-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+    <g id="L2-M3" class="machine is-normal" transform="translate(680,22)" aria-label="Line 2 M3 Molding: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Molding</text>
+      <text class="mid" x="16" y="60">L2-M3</text>
+      <text id="L2-M3-state" class="state" x="16" y="104">RUNNING</text>
+      <g id="L2-M3-CV2" class="valve" transform="translate(16,130)">
+        <polygon class="icon" points="0,0 0,16 10,8"/>
+        <polygon class="icon" points="20,0 20,16 10,8"/>
+        <text class="label" x="28" y="14">CV-2 valve</text>
+      </g>
+    </g>
+    <g id="L2-M4" class="machine is-normal" transform="translate(930,22)" aria-label="Line 2 M4 Inspection: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Inspection</text>
+      <text class="mid" x="16" y="60">L2-M4</text>
+      <text id="L2-M4-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+  </g>
+
+  <!-- ================= LINE 3 ================= -->
+  <g id="L3" class="lane" transform="translate(0,440)">
+    <rect class="lane-bg" x="20" y="0" width="1160" height="180" rx="12"/>
+    <text class="lane-name" x="40" y="82">LINE 3</text>
+    <text id="L3-status" class="lane-status" x="40" y="110">Running</text>
+    <rect class="conveyor" x="160" y="85" width="1000" height="10" rx="5"/>
+    <use href="#flow-arrow" class="flow" x="400" y="90"/>
+    <use href="#flow-arrow" class="flow" x="650" y="90"/>
+    <use href="#flow-arrow" class="flow" x="900" y="90"/>
+    <use href="#flow-arrow" class="flow" x="1146" y="90"/>
+
+    <g id="L3-M1" class="machine is-normal" transform="translate(180,22)" aria-label="Line 3 M1 Feeder: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Feeder</text>
+      <text class="mid" x="16" y="60">L3-M1</text>
+      <text id="L3-M1-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+    <g id="L3-M2" class="machine is-normal" transform="translate(430,22)" aria-label="Line 3 M2 Dryer: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Dryer</text>
+      <text class="mid" x="16" y="60">L3-M2</text>
+      <text id="L3-M2-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+    <g id="L3-M3" class="machine is-normal" transform="translate(680,22)" aria-label="Line 3 M3 Molding: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Molding</text>
+      <text class="mid" x="16" y="60">L3-M3</text>
+      <text id="L3-M3-state" class="state" x="16" y="104">RUNNING</text>
+      <g id="L3-M3-CV3" class="valve" transform="translate(16,130)">
+        <polygon class="icon" points="0,0 0,16 10,8"/>
+        <polygon class="icon" points="20,0 20,16 10,8"/>
+        <text class="label" x="28" y="14">CV-3 valve</text>
+      </g>
+    </g>
+    <g id="L3-M4" class="machine is-normal" transform="translate(930,22)" aria-label="Line 3 M4 Inspection: running">
+      <rect class="focus" x="-8" y="-8" width="216" height="136" rx="14"/>
+      <rect class="body" x="0" y="0" width="200" height="120" rx="10"/>
+      <circle class="led" cx="178" cy="22" r="9"/>
+      <text class="name" x="16" y="36">Inspection</text>
+      <text class="mid" x="16" y="60">L3-M4</text>
+      <text id="L3-M4-state" class="state" x="16" y="104">RUNNING</text>
+    </g>
+  </g>
+</svg>

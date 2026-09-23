@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LineSleuth — Line investigation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app">
+  <div id="fixture-banner" class="fixture-banner hidden" role="alert">
+    OFFLINE FIXTURE — scripted agent, not Gemini. Queries are real; the reasoning is not. UI development only.
+  </div>
+
+  <header class="topbar">
+    <div><span class="wordmark">LineSleuth</span><span class="sub">Demo Plant · Night shift</span></div>
+    <div><span class="clock-label">Scenario time</span><span id="clock" class="clock" aria-live="off">03:00:00</span></div>
+    <div><span class="chip chip-info">Demo scenario</span></div>
+  </header>
+
+  <main class="main">
+    <div class="left">
+      <section id="alert" class="alert normal">
+        <div>
+          <h1 id="alert-title">All lines running</h1>
+          <p id="alert-sub">No active alarms</p>
+        </div>
+        <div class="alert-right">
+          <div id="downtime-box" class="hidden">
+            <div class="downtime-label">Downtime</div>
+            <div id="downtime" class="downtime" aria-live="off">00:00:00</div>
+          </div>
+          <button id="investigate" class="btn-primary" type="button">
+            <span id="investigate-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="10" cy="10" r="7"/><path d="M15.5 15.5 21 21"/></svg>
+            </span>
+            <span id="investigate-label">Investigate</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="plant">
+        <!--LINE_LAYOUT_SVG-->
+        <div class="legend">
+          <span><i class="dot" style="background:var(--color-success)"></i>Running</span>
+          <span><i class="dot" style="background:var(--color-warn)"></i>Warning</span>
+          <span><i class="dot" style="background:var(--color-danger)"></i>Stopped</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" aria-label="Investigation">
+      <div class="panel-head">
+        <h2>Investigation</h2>
+        <span id="status-chip" class="chip chip-muted">Not started</span>
+        <span id="elapsed" class="elapsed hidden">Elapsed 00:00</span>
+      </div>
+      <div id="panel-body" class="panel-body">
+        <div id="empty" class="empty">
+          <p>No investigation yet.</p>
+          <p>Press Investigate. LineSleuth will check alarms, sensors, and shift logs, and show every piece of evidence it finds.</p>
+        </div>
+        <div id="cards" aria-live="polite"></div>
+        <div id="result"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bottombar">
+    <label for="scenario">Scenario:</label>
+    <select id="scenario"></select>
+    <button id="reset" class="btn-text" type="button">Reset</button>
+    <span id="mode" class="mode"></span>
+  </footer>
+</div>
+
+<div id="modal" class="backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="wo-title">
+  <div class="modal">
+    <div>
+      <div class="qr"><img id="qr-img" alt="QR code linking to the work order"></div>
+      <div class="qr-caption">Scan to open on your phone</div>
+      <div id="qr-url" class="qr-url"></div>
+    </div>
+    <div>
+      <div id="wo-ok">
+        <h2 id="wo-title"><span class="ok">&#10003;</span> Work order created</h2>
+        <div class="field"><div id="wo-id" class="root-cause" style="font-size:var(--fs-xl)"></div></div>
+        <div class="field"><div class="label">Line / Machine</div><div id="wo-line"></div></div>
+        <div class="field"><div class="label">Root cause</div><div id="wo-cause"></div></div>
+        <div class="field"><span id="wo-priority" class="chip chip-warn"></span></div>
+      </div>
+      <div id="wo-fail" class="hidden">
+        <p class="error-text">Could not create work order. Try again.</p>
+        <button id="wo-retry" class="btn-outline" type="button">Try again</button>
+      </div>
+      <div class="modal-foot"><button id="wo-done" class="btn-outline" type="button">Done</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

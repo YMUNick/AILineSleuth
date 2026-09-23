@@ -1,0 +1,10 @@
+.venv
+.env
+**/__pycache__
+.pytest_cache
+app/data/generated
+docs
+tests
+scripts
+*.md
+!app/data/sop.md
