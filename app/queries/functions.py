@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from app.data.catalog import MACHINES, SENSOR_NAMES, SENSORS, sensor_label
-from app.data.scenarios import SCENARIO_DATE
+from app.data.scenarios import DATA_END, SCENARIO_DATE, SCENARIOS
 from app.queries.backends import QueryBackend
 
 log = logging.getLogger("linesleuth.query")
@@ -152,11 +152,11 @@ def _window(args: dict) -> tuple[datetime, datetime]:
 
 
 def _line(args: dict) -> int:
-    try:
-        line = int(args.get("line"))
-    except (TypeError, ValueError):
-        raise QueryArgError("line must be 1, 2 or 3")
-    if line not in (1, 2, 3):
+    # Gemini sends JSON numbers, so 2.0 is fine; bool, 2.7 and "2" are rejected, not coerced (BUG-008)
+    line = args.get("line")
+    if isinstance(line, float) and line.is_integer():
+        line = int(line)
+    if isinstance(line, bool) or not isinstance(line, int) or line not in (1, 2, 3):
         raise QueryArgError("line must be 1, 2 or 3")
     return line
 
@@ -173,6 +173,22 @@ def _machine_sensor(args: dict, need_sensor: bool = True) -> tuple[str, str | No
     if SENSORS[sensor]["machine"] != machine:
         raise QueryArgError(f"sensor {sensor} belongs to {SENSORS[sensor]['machine']}, not {machine}")
     return machine, sensor
+
+
+def _expected_minutes(scenario_id: str, start: datetime, end: datetime) -> tuple[int, str | None]:
+    """Minutes in [start, end] that should already have a reading. Minutes after the scenario's current
+    time (incident.now, ~03:00) have not happened yet, so they are not "missing" (BUG-002).
+    Returns (expected, cut) where cut is "HH:MM" when the window reaches past that time, else None."""
+    inc = (SCENARIOS.get(scenario_id) or {}).get("incident") or {}
+    now = datetime.strptime(f"{SCENARIO_DATE} {(inc.get('now') or DATA_END)[:5]}", "%Y-%m-%d %H:%M")
+    last = min(end, now)
+    expected = int((last - start).total_seconds() // 60) + 1 if last >= start else 0
+    return expected, (f"{now:%H:%M}" if end > now else None)
+
+
+def _future_note(cut: str | None) -> dict:
+    return {"note": f"Window ends after the current time {cut}; later minutes have no data yet "
+                    "(not counted as missing)."} if cut else {}
 
 
 def hm(ts: str) -> str:
@@ -230,10 +246,10 @@ def _get_sensor_window(backend: QueryBackend, scenario_id: str, args: dict) -> Q
     spec = SENSORS[sensor]
     lo, hi, unit, sop = spec["normal_low"], spec["normal_high"], spec["unit"], spec["sop"]
     label = sensor_label(sensor, line)
-    expected = int((end - start).total_seconds() // 60) + 1
+    expected, cut = _expected_minutes(scenario_id, start, end)
     missing = max(0, expected - len(main))
     summary: dict[str, Any] = {"sensor": sensor, "unit": unit, "normal_range": [lo, hi], "sop": sop,
-                               "rows": len(main), "missing_minutes": missing}
+                               "rows": len(main), "missing_minutes": missing, **_future_note(cut)}
     check_name = label
     if not main:
         card = dict(title=label, tone="normal", key_value="No data", key_detail="No readings in window",
@@ -284,11 +300,11 @@ def _compare_to_baseline(backend: QueryBackend, scenario_id: str, args: dict) ->
     label = sensor_label(sensor, line)
     base = [r for r in rows if r["period"] == "baseline"]
     win = [r for r in rows if r["period"] == "window"]
-    expected = int((end - start).total_seconds() // 60) + 1
+    expected, cut = _expected_minutes(scenario_id, start, end)
     missing = max(0, expected - len(win))
     summary: dict[str, Any] = {"sensor": sensor, "unit": unit,
                                "baseline_window": f"{b_start:%H:%M}-{b_end:%H:%M}", "baseline_rows": len(base),
-                               "window_rows": len(win), "missing_minutes": missing}
+                               "window_rows": len(win), "missing_minutes": missing, **_future_note(cut)}
     title = f"{label} vs. baseline"
     if not base or not win:
         card = dict(title=title, tone="normal", key_value="No data",

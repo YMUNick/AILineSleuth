@@ -50,8 +50,9 @@ def _cards(ex, sid, calls):
 
 
 def _raw(status="root_cause", key="other", cited=(1, 2), **extra):
-    return dict(status=status, root_cause_key=key, root_cause="Some cause", cited_evidence=list(cited),
-                recommended_actions=["Do it per SOP 4.2."], **extra)
+    base = dict(status=status, root_cause_key=key, root_cause="Some cause", cited_evidence=list(cited),
+                recommended_actions=["Do it per SOP 4.2."])
+    return {**base, **extra}  # extra may override a default (was a TypeError hidden by xfail, see BUG-006)
 
 
 # ==================================================================== 1. grey card, both directions
@@ -91,7 +92,6 @@ def test_healthy_data_full_sensor_sweep_is_normal(ex, sid):
             assert r.card["tone"] == "normal", (fn, sensor, r.card)
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-001: a root cause citing only normal cards is accepted (docs/qa/bugs.md)")
 @pytest.mark.parametrize("sid", ["N01", "N02"])
 def test_root_cause_from_only_normal_evidence_becomes_grey(ex, sid):
     line = SCENARIOS[sid]["line"]
@@ -136,7 +136,6 @@ def test_citing_no_data_cards_cannot_produce_high_confidence(ex):
     assert out.get("confidence") in (None, "Low")
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-002: minutes after the data end (03:00) are counted as 'missing' (docs/qa/bugs.md)")
 def test_window_past_incident_time_does_not_claim_missing_data(ex):
     # storyboard shows 02:30-03:05 as the card time range; Gemini may well ask for it
     r = ex.execute("R01", "get_sensor_window", dict(line=2, machine="M3", sensor="mold_temp_c", start="02:30", end="03:05"))
@@ -192,7 +191,6 @@ def test_public_api_has_no_free_text_input():
         assert set(s.get("properties", {})) <= {"scenario_id"}, (name, s)
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-006: malformed model output (string instead of list) is not rejected (docs/qa/bugs.md)")
 def test_malformed_actions_string_is_not_split_into_characters(ex):
     steps = _cards(ex, "R01", [("get_alarm_events", dict(line=2, **W)),
                                ("compare_to_baseline", dict(line=2, machine="M3", sensor="coolant_flow_lpm", **W))])
@@ -262,7 +260,6 @@ def test_double_anomaly_both_faults_are_visible_as_evidence(qa_backend):
     assert heater.card["tone"] == "warn" and "Above" in heater.card["key_detail"]
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-007: generator noise pushes % sensors above 100% (docs/qa/bugs.md)")
 def test_percentage_sensors_stay_within_0_100(ex):
     rows = ex.backend.run("SELECT scenario_id, sensor, value FROM {sensor_readings} "
                           "WHERE unit = '%' AND (value > 100 OR value < 0)", {})
@@ -372,7 +369,6 @@ def test_rate_limit_blocks_same_client(api):
     assert [_start(client) for _ in range(3)] == [201, 201, 429]
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-003: rate limit keyed on client-supplied X-Forwarded-For (docs/qa/bugs.md)")
 def test_rate_limit_cannot_be_bypassed_with_forged_header(api):
     _, client = api
     # On Cloud Run the proxy appends the real IP; the attacker controls everything before it.
@@ -380,7 +376,6 @@ def test_rate_limit_cannot_be_bypassed_with_forged_header(api):
     assert codes[-1] == 429
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-005: a rejected 409 request still consumes rate-limit quota (docs/qa/bugs.md)")
 def test_conflict_does_not_consume_quota(api, monkeypatch):
     m, client = api
     monkeypatch.setattr(m.manager, "settings", dataclasses.replace(m.manager.settings, fixture_step_delay_s=0.5))

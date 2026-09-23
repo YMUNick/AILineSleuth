@@ -1,8 +1,11 @@
 """API flow in OFFLINE FIXTURE mode (no GCP). Checks plumbing and labelling, not AI quality."""
+import dataclasses
 import time
+from collections import defaultdict, deque
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.requests import Request
 
 from app.agent.conclusion import finalize
 from app.data.scenarios import SCENARIOS
@@ -81,3 +84,71 @@ def test_root_cause_needs_two_valid_citations():
                recommended_actions=["Do it"])
     out = finalize(raw, steps, SCENARIOS["R01"])
     assert out["status"] == "insufficient_evidence" and out["note"]
+
+
+# ---------------------------------------------------------------- BUG-003 / BUG-004: who is calling
+KEY = "presenter-key-for-tests-0123"
+
+
+@pytest.mark.parametrize("hops,xff,expected", [
+    (1, None, "9.9.9.9"),                                   # local dev: no proxy header
+    (1, "203.0.113.9", "203.0.113.9"),                      # Cloud Run: GFE appends the real IP
+    (1, "10.0.0.1, 10.0.0.2, 203.0.113.9", "203.0.113.9"),  # forged entries in front are ignored
+    (2, "10.0.0.1, 203.0.113.9, 34.1.2.3", "203.0.113.9"),  # behind an external load balancer
+])
+def test_client_ip_uses_proxy_appended_entry(monkeypatch, hops, xff, expected):
+    import app.main as m
+    monkeypatch.setattr(m, "settings", dataclasses.replace(m.settings, trusted_proxy_hops=hops))
+    headers = [(b"x-forwarded-for", xff.encode())] if xff else []
+    assert m._client_ip(Request({"type": "http", "headers": headers, "client": ("9.9.9.9", 1)})) == expected
+
+
+@pytest.fixture
+def browsers(monkeypatch):
+    """Presenter and a stranger: two browsers (separate cookie jars) behind the same IP."""
+    import app.main as m
+    monkeypatch.setattr(m, "_hits", defaultdict(deque))
+    monkeypatch.setattr(m, "settings", dataclasses.replace(m.settings, presenter_key=KEY, rate_limit_per_hour=1))
+    monkeypatch.setattr(m.manager, "settings", dataclasses.replace(
+        m.manager.settings, fixture_step_delay_s=0.3, max_concurrent_investigations=1))
+    presenter, stranger = TestClient(m.app), TestClient(m.app)
+    yield presenter, stranger
+    for c in (presenter, stranger):
+        c.post("/api/reset", json={})
+
+
+def _login(client, key):
+    r = client.get(f"/?key={key}", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/"  # key is dropped from the address bar
+    return client.get("/api/config").json()["presenter"]
+
+
+def test_stranger_cannot_block_or_cancel_the_presenter(browsers):
+    presenter, stranger = browsers
+    assert _login(presenter, KEY) is True
+    assert stranger.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 201  # fills public slot
+    p = presenter.post("/api/investigations", json={"scenario_id": "R01"})
+    assert p.status_code == 201                                             # not blocked by the stranger
+    assert stranger.post("/api/reset", json={}).json()["cancelled"] == 1    # cancels only its own
+    assert presenter.get(f"/api/investigations/{p.json()['id']}").json()["status"] == "running"
+
+
+def test_public_concurrency_cap_and_own_reset(browsers, monkeypatch):
+    import app.main as m
+    monkeypatch.setattr(m, "settings", dataclasses.replace(m.settings, rate_limit_per_hour=10))
+    presenter, stranger = browsers
+    assert stranger.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 201
+    assert presenter.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 409  # no key: cap 1
+    assert presenter.post("/api/reset", json={}).json()["cancelled"] == 0   # nothing of its own to cancel
+
+
+def test_presenter_skips_rate_limit_and_wrong_key_does_nothing(browsers):
+    presenter, stranger = browsers
+    assert _login(stranger, "wrong-key-wrong-key-wrong") is False
+    assert _login(presenter, KEY) is True
+    for _ in range(3):  # public limit is 1/hour; the presenter is never counted or blocked
+        presenter.post("/api/reset", json={})
+        assert presenter.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 201
+    assert stranger.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 201
+    stranger.post("/api/reset", json={})
+    assert stranger.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 429

@@ -28,8 +28,10 @@ class Cancelled(Exception):
 
 
 class Investigation:
-    def __init__(self, scenario_id: str, settings: Settings):
+    def __init__(self, scenario_id: str, settings: Settings, owner: str = "", presenter: bool = False):
         self.id = uuid.uuid4().hex[:12]
+        self.owner = owner          # browser session that started it; only that session can cancel it (BUG-004)
+        self.presenter = presenter  # started with the presenter key: not counted against the public limits
         self.scenario_id = scenario_id
         self.scenario = SCENARIOS[scenario_id]
         self.agent_mode = settings.agent_mode
@@ -97,17 +99,20 @@ class InvestigationManager:
         self._items: dict[str, Investigation] = {}
         self._work_orders: dict[str, dict] = {}
         self._lock = threading.Lock()
+        self._wo_lock = threading.Lock()  # investigations can now run side by side; keep WO numbering serial
 
     # ---------------------------------------------------------------- investigations
-    def active(self) -> Investigation | None:
+    def start(self, scenario_id: str, background: bool = True, owner: str = "",
+              presenter: bool = False) -> Investigation:
+        """One running investigation per owner (browser session). Public investigations are capped at
+        MAX_CONCURRENT_INVESTIGATIONS; the presenter's never wait for, or get blocked by, other people's (BUG-004)."""
         with self._lock:
-            return next((i for i in self._items.values() if i.status == "running"), None)
-
-    def start(self, scenario_id: str, background: bool = True) -> Investigation:
-        if self.active():
-            raise RuntimeError("An investigation is already running. Press Reset first.")
-        inv = Investigation(scenario_id, self.settings)
-        with self._lock:
+            running = [i for i in self._items.values() if i.status == "running"]
+            if any(i.owner == owner for i in running):
+                raise RuntimeError("Your investigation is still running. Press Reset first.")
+            if not presenter and sum(not i.presenter for i in running) >= self.settings.max_concurrent_investigations:
+                raise RuntimeError("Too many investigations are running right now. Try again in a minute.")
+            inv = Investigation(scenario_id, self.settings, owner=owner, presenter=presenter)
             self._items[inv.id] = inv
         if background:
             threading.Thread(target=self._run, args=(inv,), daemon=True, name=f"inv-{inv.id}").start()
@@ -119,12 +124,28 @@ class InvestigationManager:
         return self._items.get(inv_id)
 
     def reset(self) -> None:
+        """Cancel EVERY running investigation. Internal use only (regression runner); the public
+        /api/reset calls cancel(owner) so nobody can cancel someone else's investigation (BUG-004)."""
         with self._lock:
-            for inv in self._items.values():
-                if inv.status == "running":
-                    inv.cancel_event.set()
-                    inv.status = "cancelled"
-                    inv.finished = time.monotonic()
+            targets = [i for i in self._items.values() if i.status == "running"]
+        for inv in targets:
+            self._cancel(inv)
+
+    def cancel(self, owner: str) -> int:
+        """Cancel the running investigations started by this owner. Returns how many were cancelled."""
+        with self._lock:
+            targets = [i for i in self._items.values() if i.status == "running" and i.owner == owner]
+        return sum(self._cancel(inv) for inv in targets)
+
+    @staticmethod
+    def _cancel(inv: Investigation) -> bool:
+        with inv.lock:
+            if inv.status != "running":
+                return False
+            inv.cancel_event.set()
+            inv.status = "cancelled"
+            inv.finished = time.monotonic()
+            return True
 
     def _run(self, inv: Investigation) -> None:
         ctx = _Context(inv, self.executor, inv.started + self.settings.investigation_timeout_s)
@@ -160,6 +181,13 @@ class InvestigationManager:
             c = inv.conclusion
         if not c or c["status"] != "root_cause":
             raise ValueError("A work order needs a root-cause conclusion")
+        with self._wo_lock:
+            return self._insert_work_order(inv, c)
+
+    def _insert_work_order(self, inv: Investigation, c: dict) -> dict:
+        with inv.lock:  # a second click may have waited on _wo_lock while the first one created it
+            if inv.work_order_id:
+                return self.get_work_order(inv.work_order_id)
         n = self.backend.run(COUNT_WORK_ORDERS, {})[0]["n"] + 1
         wo_id = f"WO-{n:04d}"
         created = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None)

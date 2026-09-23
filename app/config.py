@@ -39,6 +39,10 @@ class Settings:
     investigation_timeout_s: float
     fixture_step_delay_s: float
     rate_limit_per_hour: int
+    global_rate_limit_per_hour: int  # all clients together: the real cost ceiling (BUG-003)
+    trusted_proxy_hops: int  # X-Forwarded-For entries appended by trusted proxies (Cloud Run GFE = 1)
+    max_concurrent_investigations: int  # public (non-presenter) investigations running at once (BUG-004)
+    presenter_key: str  # secret; /?key=<it> marks the presenter's browser (BUG-004). Empty = feature off
     public_base_url: str  # absolute base URL used in QR codes (phones cannot reach "localhost")
 
     @classmethod
@@ -56,6 +60,10 @@ class Settings:
             investigation_timeout_s=float(_env("INVESTIGATION_TIMEOUT_S", "90")),
             fixture_step_delay_s=float(_env("FIXTURE_STEP_DELAY_S", "1.0")),
             rate_limit_per_hour=int(_env("RATE_LIMIT_PER_HOUR", "20")),
+            global_rate_limit_per_hour=int(_env("GLOBAL_RATE_LIMIT_PER_HOUR", "60")),
+            trusted_proxy_hops=int(_env("TRUSTED_PROXY_HOPS", "1")),
+            max_concurrent_investigations=int(_env("MAX_CONCURRENT_INVESTIGATIONS", "3")),
+            presenter_key=_env("PRESENTER_KEY", ""),
             public_base_url=_env("PUBLIC_BASE_URL", "").rstrip("/"),
         )
 
@@ -66,6 +74,10 @@ class Settings:
             raise ValueError(f"AGENT_MODE must be one of {AGENT_MODES}")
         if self.query_backend == "bigquery" and not self.gcp_project:
             raise ValueError("QUERY_BACKEND=bigquery requires GOOGLE_CLOUD_PROJECT")
+        if self.trusted_proxy_hops < 0:
+            raise ValueError("TRUSTED_PROXY_HOPS must be >= 0")
+        if self.presenter_key and len(self.presenter_key) < 16:
+            raise ValueError("PRESENTER_KEY must be at least 16 characters (or empty to disable)")
 
 
 def get_settings() -> Settings:

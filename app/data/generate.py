@@ -63,11 +63,14 @@ def generate_rows(scenario_id: str, spec: dict, rng: random.Random):
             if v is None:
                 continue
             noise = rng.gauss(0, s["noise"]) if s["noise"] else 0.0
+            value = round(v + noise, 1)
+            if s["unit"] == "%":  # valve position / heater power / reject rate cannot leave 0-100 (BUG-007)
+                value = min(100.0, max(0.0, value))
             n += 1
             sensors.append(dict(
                 row_id=f"{scenario_id}-S{n:05d}", scenario_id=scenario_id,
                 ts=t.strftime("%Y-%m-%d %H:%M:%S"), line=line, machine=s["machine"], sensor=sensor,
-                value=round(v + noise, 1), unit=s["unit"],
+                value=value, unit=s["unit"],
             ))
     # Routine background entries every scenario has, plus the story events.
     routine = [

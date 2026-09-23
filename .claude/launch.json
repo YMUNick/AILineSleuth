@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "linesleuth-offline",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-c", "import os, uvicorn; os.environ.setdefault('AGENT_MODE', 'offline_fixture'); uvicorn.run('app.main:app', port=8000)"],
+      "port": 8000
+    }
+  ]
+}

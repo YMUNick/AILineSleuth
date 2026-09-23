@@ -22,6 +22,9 @@ def test_exactly_five_fixed_functions():
     ("get_sensor_window", dict(line=2, machine="M3", sensor="mold_temp_c; DROP TABLE events", **W)),
     ("get_sensor_window", dict(line=2, machine="M1", sensor="mold_temp_c", **W)),   # sensor on wrong machine
     ("get_alarm_events", dict(line=7, **W)),
+    ("get_alarm_events", dict(line=True, **W)),                                      # BUG-008: no coercion
+    ("get_alarm_events", dict(line=2.7, **W)),
+    ("get_alarm_events", dict(line="2", **W)),
     ("get_alarm_events", dict(line=2, start="2:30am", end="03:00")),
     ("get_alarm_events", dict(line=2, start="03:00", end="02:30")),
     ("get_alarm_events", dict(line=2, start="00:00", end="23:00")),                  # window too long
@@ -68,3 +71,10 @@ def test_alarm_card_matches_row(ex):
     r = ex.execute("R01", "get_alarm_events", dict(line=2, **W))
     top = next(row for row in r.rows if row["row_id"] == r.card["highlight_row_ids"][0])
     assert top["ts"].endswith("03:00:12") and "03:00:12" in r.card["key_detail"]
+
+
+def test_integral_float_line_is_accepted(ex):
+    # Gemini function-call arguments arrive as JSON numbers (2.0), which must keep working
+    a = ex.execute("R01", "get_alarm_events", dict(line=2.0, **W))
+    b = ex.execute("R01", "get_alarm_events", dict(line=2, **W))
+    assert [r["row_id"] for r in a.rows] == [r["row_id"] for r in b.rows] and a.rows
