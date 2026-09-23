@@ -44,6 +44,8 @@ class Settings:
     max_concurrent_investigations: int  # public (non-presenter) investigations running at once (BUG-004)
     presenter_key: str  # secret; /?key=<it> marks the presenter's browser (BUG-004). Empty = feature off
     public_base_url: str  # absolute base URL used in QR codes (phones cannot reach "localhost")
+    manual_baseline_min: str = ""     # Recap "Before" minutes; raw text, checked by manual_baseline()
+    manual_baseline_source: str = ""  # where that number comes from (interview / measurement)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -65,6 +67,8 @@ class Settings:
             max_concurrent_investigations=int(_env("MAX_CONCURRENT_INVESTIGATIONS", "3")),
             presenter_key=_env("PRESENTER_KEY", ""),
             public_base_url=_env("PUBLIC_BASE_URL", "").rstrip("/"),
+            manual_baseline_min=_env("MANUAL_BASELINE_MIN", ""),
+            manual_baseline_source=_env("MANUAL_BASELINE_SOURCE", ""),
         )
 
     def validate(self) -> None:
@@ -78,6 +82,32 @@ class Settings:
             raise ValueError("TRUSTED_PROXY_HOPS must be >= 0")
         if self.presenter_key and len(self.presenter_key) < 16:
             raise ValueError("PRESENTER_KEY must be at least 16 characters (or empty to disable)")
+
+
+MANUAL_BASELINE_MAX_MIN = 480
+MANUAL_BASELINE_SOURCE_MAX = 120
+
+
+def manual_baseline(s: Settings) -> tuple[dict | None, str | None]:
+    """The Recap "Before" value (ui-v2-spec 4.2): {minutes, source}, or None with the reason.
+
+    Shown only when BOTH the minutes (1-480) and a source are set: a number without a source counts as
+    not set. There is deliberately no default - the app never shows a manual baseline nobody measured.
+    A bad value does not stop the server; the Recap just shows the neutral "Not yet measured" text."""
+    raw, source = s.manual_baseline_min, s.manual_baseline_source
+    if not raw and not source:
+        return None, "MANUAL_BASELINE_MIN / MANUAL_BASELINE_SOURCE not set"
+    if not raw or not source:
+        return None, "MANUAL_BASELINE_MIN and MANUAL_BASELINE_SOURCE must both be set"
+    try:
+        minutes = float(raw)
+    except ValueError:
+        return None, f"MANUAL_BASELINE_MIN is not a number: {raw!r}"
+    if not 1 <= minutes <= MANUAL_BASELINE_MAX_MIN:  # also rejects nan / inf
+        return None, f"MANUAL_BASELINE_MIN must be 1-{MANUAL_BASELINE_MAX_MIN} minutes, got {raw!r}"
+    if len(source) > MANUAL_BASELINE_SOURCE_MAX:
+        return None, f"MANUAL_BASELINE_SOURCE is longer than {MANUAL_BASELINE_SOURCE_MAX} characters"
+    return dict(minutes=int(minutes) if minutes.is_integer() else round(minutes, 1), source=source), None
 
 
 def get_settings() -> Settings:

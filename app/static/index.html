@@ -24,38 +24,35 @@
   <main class="main">
     <div class="left">
       <section id="alert" class="alert normal">
-        <div>
-          <h1 id="alert-title">All lines running</h1>
-          <p id="alert-sub">No active alarms</p>
+        <h1 id="alert-title">All lines running</h1>
+        <p id="alert-sub">No active alarms</p>
+        <div id="downtime-box" class="hidden">
+          <div class="downtime-label">Downtime</div>
+          <div id="downtime" class="downtime" aria-live="off">00:00:00</div>
         </div>
-        <div class="alert-right">
-          <div id="downtime-box" class="hidden">
-            <div class="downtime-label">Downtime</div>
-            <div id="downtime" class="downtime" aria-live="off">00:00:00</div>
-          </div>
-          <button id="investigate" class="btn-primary" type="button">
-            <span id="investigate-icon" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="10" cy="10" r="7"/><path d="M15.5 15.5 21 21"/></svg>
-            </span>
-            <span id="investigate-label">Investigate</span>
-          </button>
-        </div>
+        <button id="investigate" class="btn-primary" type="button">
+          <span id="investigate-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="10" cy="10" r="7"/><path d="M15.5 15.5 21 21"/></svg>
+          </span>
+          <span id="investigate-label">Investigate</span>
+        </button>
       </section>
 
       <section class="plant">
-        <!--LINE_LAYOUT_SVG-->
         <div class="legend">
           <span><i class="dot" style="background:var(--color-success)"></i>Running</span>
           <span><i class="dot" style="background:var(--color-warn)"></i>Warning</span>
           <span><i class="dot" style="background:var(--color-danger)"></i>Stopped</span>
         </div>
+        <!--LINE_LAYOUT_SVG-->
+        <div id="plant-live" class="sr-only" aria-live="polite"></div>
       </section>
     </div>
 
     <section class="panel" aria-label="Investigation">
       <div class="panel-head">
         <h2>Investigation</h2>
-        <span id="status-chip" class="chip chip-muted">Not started</span>
+        <span id="status-chip" class="chip chip-muted" role="status">Not started</span>
         <span id="elapsed" class="elapsed hidden">Elapsed 00:00</span>
       </div>
       <div id="panel-body" class="panel-body">
@@ -63,8 +60,9 @@
           <p>No investigation yet.</p>
           <p>Press Investigate. LineSleuth will check alarms, sensors, and shift logs, and show every piece of evidence it finds.</p>
         </div>
-        <div id="cards" aria-live="polite"></div>
         <div id="result"></div>
+        <div id="evidence-head" class="subhead evidence-head hidden">Evidence</div>
+        <div id="cards" class="evidence-list" aria-live="polite"></div>
       </div>
     </section>
   </main>
@@ -96,7 +94,42 @@
         <p class="error-text">Could not create work order. Try again.</p>
         <button id="wo-retry" class="btn-outline" type="button">Try again</button>
       </div>
-      <div class="modal-foot"><button id="wo-done" class="btn-outline" type="button">Done</button></div>
+      <div class="modal-foot">
+        <button id="wo-done" class="btn-text" type="button">Done</button>
+        <button id="show-summary" class="btn-outline hidden" type="button">Show summary</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="recap" class="backdrop recap-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="recap-title recap-cause">
+  <div class="recap">
+    <div id="recap-fixture" class="recap-fixture hidden">OFFLINE FIXTURE — not a Gemini run</div>
+    <div id="recap-title" class="eyebrow">Investigation summary</div>
+    <div id="recap-where" class="recap-where"></div>
+    <div id="recap-cause" class="recap-cause"></div>
+    <div class="recap-row">
+      <div class="recap-label"><b>Before</b></div>
+      <div class="recap-label-text">Manual investigation (baseline)</div>
+      <div id="recap-before-value" class="recap-value"></div>
+      <div class="recap-body">
+        <div id="recap-before-bar" class="recap-bar recap-bar-before hidden"><i></i></div>
+        <div id="recap-before-note" class="recap-note"></div>
+      </div>
+    </div>
+    <div class="recap-row">
+      <div class="recap-label"><b>After</b></div>
+      <div class="recap-label-text">LineSleuth, this investigation (measured)</div>
+      <div id="recap-after-value" class="recap-value recap-after"></div>
+      <div class="recap-body">
+        <div id="recap-after-bar" class="recap-bar recap-bar-after hidden"><i></i></div>
+        <div id="recap-after-detail" class="recap-detail"></div>
+        <div class="recap-muted">Measured by the server from Investigate to conclusion.</div>
+      </div>
+    </div>
+    <div class="recap-foot">
+      <span>Every conclusion backed by evidence.</span>
+      <button id="recap-close" class="btn-outline" type="button">Close</button>
     </div>
   </div>
 </div>

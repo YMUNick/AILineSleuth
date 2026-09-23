@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LineSleuth One-Pager</title>
+<!-- Print source for one-pager.pdf. Content mirrors one-pager.md (edit both). -->
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --ink: #14171c;
+    --muted: #5b6270;
+    --line: #e3e6eb;
+    --amber: #b86e00;
+    --amber-bg: #fff4e0;
+    --red: #c9362c;
+    --panel: #f5f6f8;
+    --zh: #6a5a3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #ffffff; color: var(--ink);
+    font-family: "Inter", "Segoe UI", Arial, "Microsoft JhengHei", sans-serif; }
+  .page { width: 210mm; height: 297mm; padding: 13mm 14mm 11mm; display: flex; flex-direction: column; gap: 4.2mm; overflow: hidden; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--ink); padding-bottom: 3mm; }
+  .brand { font-size: 27pt; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+  .brand span { color: var(--amber); }
+  .meta { text-align: right; font-size: 8.5pt; color: var(--muted); line-height: 1.45; }
+  .headline { font-size: 13pt; font-weight: 650; line-height: 1.35; margin: 0; }
+  .zh { font-size: 7.6pt; color: var(--zh); margin-top: 1.2mm; line-height: 1.45; }
+  .zh::before { content: "重點 "; font-weight: 700; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 6mm; }
+  section h2 { font-size: 8.4pt; text-transform: uppercase; letter-spacing: 1.1px; color: var(--amber); margin: 0 0 1.4mm; font-weight: 800; }
+  section p, section li { font-size: 8.8pt; line-height: 1.45; margin: 0; }
+  section ul, section ol { margin: 0; padding-left: 4.2mm; }
+  section li { margin-bottom: 0.8mm; }
+  .problem { background: var(--panel); border-radius: 3mm; padding: 3.2mm 4mm; }
+  .problem p strong { color: var(--red); }
+  .demo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4mm; margin-top: 2mm; }
+  .step { border: 1px solid var(--line); border-radius: 2.4mm; padding: 2.4mm 2.8mm; }
+  .step b { display: block; font-size: 8.4pt; margin-bottom: 0.6mm; }
+  .step .n { display: inline-block; width: 4.6mm; height: 4.6mm; border-radius: 50%; background: var(--ink); color: #fff; font-size: 7pt; text-align: center; line-height: 4.6mm; margin-right: 1.2mm; }
+  .step p { font-size: 8pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 7.9pt; }
+  th, td { text-align: left; padding: 1.3mm 1.6mm; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.35; }
+  th { color: var(--muted); font-weight: 600; }
+  tr.us td { background: var(--amber-bg); font-weight: 700; }
+  .tag { font-size: 6.8pt; color: var(--muted); font-style: italic; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 1.4mm; }
+  .chip { font-size: 7.8pt; border: 1px solid var(--line); border-radius: 10mm; padding: 0.8mm 2.4mm; background: var(--panel); }
+  .chip b { color: var(--ink); }
+  footer { margin-top: auto; background: var(--ink); color: #fff; border-radius: 3mm; padding: 3.4mm 5mm; display: flex; justify-content: space-between; align-items: center; }
+  footer .big { font-size: 14pt; font-weight: 800; }
+  footer .big span { color: #ffb020; }
+  footer .small { font-size: 7.4pt; color: #c9ced8; text-align: right; line-height: 1.5; }
+  .pending { color: var(--amber); font-weight: 600; font-size: 7.4pt; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="brand">Line<span>Sleuth</span></div>
+    <div class="meta">AI Builder Cup 2026 · Manufacturing<br>Draft v0.1 · 2026-09-24</div>
+  </header>
+
+  <div>
+    <p class="headline">One button takes a night-shift supervisor from line stoppage to root cause, with evidence anyone can check.</p>
+    <div class="zh">給中小代工廠夜班主管的停線調查 Copilot，一鍵找根因，每個結論都查得到證據。</div>
+  </div>
+
+  <section class="problem">
+    <h2>Problem</h2>
+    <p><strong>3 a.m., Line 2 stops.</strong> The night supervisor is alone; engineers are off site. Finding the cause means digging through Excel sheets, PLC CSV exports and shift logs, about 40 minutes <span class="pending">[pending interviews]</span>, while every hour of downtime costs X <span class="pending">[pending interviews]</span>.</p>
+    <div class="zh">凌晨停線、主管一個人翻 Excel 找原因。40 分鐘和每小時損失都還沒有訪談數字。</div>
+  </section>
+
+  <section>
+    <h2>Solution</h2>
+    <p>One <b>Investigate</b> button, no chat box. Gemini calls five fixed, tested BigQuery queries and never writes SQL. Every step becomes an evidence card that opens to its source rows. No evidence, no conclusion: it answers <b>“Insufficient evidence”</b> instead of guessing.</p>
+    <div class="demo">
+      <div class="step"><b><span class="n">1</span>Alarm</b><p>03:00, Line 2 turns red; the supervisor presses Investigate.</p></div>
+      <div class="step"><b><span class="n">2</span>Evidence</b><p>Cards appear one by one (temperature, coolant flow, valve, shift log), each tracing back to BigQuery rows.</p></div>
+      <div class="step"><b><span class="n">3</span>Action</b><p>Root cause “cooling valve CV-2 stuck” with a server-scored confidence label; one click creates a work order, opened on a phone by QR.</p></div>
+    </div>
+    <div class="zh">Gemini 只能選固定查詢，數字可回查原始列，證據不足就出灰卡。Demo 目標 90 秒 [to measure]。</div>
+  </section>
+
+  <div class="grid">
+    <section>
+      <h2>Why now, why JAPAC SMBs</h2>
+      <ul>
+        <li>“China plus one” is moving production to Vietnam, Thailand and Malaysia <span class="pending">[to verify]</span>.</li>
+        <li>Target: contract manufacturers with 50–300 staff <span class="pending">[pending interviews]</span>, no MES, no data team.</li>
+        <li>Gemini function calling makes a constrained, auditable agent practical on files these plants already export.</li>
+      </ul>
+      <div class="zh">產能南移（來源待查證），目標客戶沒有 MES 也沒有資料團隊。</div>
+    </section>
+    <section>
+      <h2>Business model</h2>
+      <ul>
+        <li><b>Onboarding fee</b>: X one-time, to turn Excel and PLC exports into clean data <span class="pending">[pending interviews]</span></li>
+        <li><b>Subscription</b>: X per production line per month <span class="pending">[pending interviews]</span></li>
+        <li>Priced below the downtime and labour it saves; customer payback in X months <span class="pending">[pending interviews]</span></li>
+      </ul>
+      <div class="zh">導入費加每條產線月訂閱；金額、回本月數都要等訪談。</div>
+    </section>
+  </div>
+
+  <section>
+    <h2>Differentiation</h2>
+    <table>
+      <tr><th></th><th>Built for</th><th>Starts from</th></tr>
+      <tr><td>Siemens Industrial Copilot</td><td>Large plants in the Siemens automation ecosystem <span class="tag">to verify</span></td><td>Automation and MES data <span class="tag">to verify</span></td></tr>
+      <tr><td>Cognite</td><td>Asset-heavy enterprises with data teams <span class="tag">to verify</span></td><td>Industrial data platform <span class="tag">to verify</span></td></tr>
+      <tr><td>Google MDE</td><td>Plants building a connected data platform on Google Cloud <span class="tag">to verify</span></td><td>Connected machine data <span class="tag">to verify</span></td></tr>
+      <tr class="us"><td>LineSleuth</td><td>Small contract manufacturers without MES</td><td>Excel sheets and PLC CSV exports</td></tr>
+    </table>
+    <div class="zh">跟大廠服務的不是同一群客戶；Google MDE 是客戶以後的升級路徑，不當對手講。</div>
+  </section>
+
+  <div class="grid">
+    <section>
+      <h2>Built on Google Cloud</h2>
+      <div class="chips">
+        <span class="chip"><b>Cloud Run</b> · Singapore</span>
+        <span class="chip"><b>BigQuery</b> · plant data</span>
+        <span class="chip"><b>Vertex AI Gemini</b> · function calling</span>
+        <span class="chip"><b>Cloud Logging</b> · replayable</span>
+        <span class="chip"><b>IAM</b> · least privilege</span>
+        <span class="chip"><b>Budget alerts</b> + rate limits</span>
+      </div>
+    </section>
+    <section>
+      <h2>Traction and validation</h2>
+      <ul>
+        <li>Prototype on simulated data: one stoppage and one healthy-data scenario</li>
+        <li>Regression set: 10 known root causes; score <span class="pending">[to measure]</span> / 10 (bar 9/10)</li>
+        <li>Plant-manager interviews: <span class="pending">[pending interviews]</span></li>
+      </ul>
+    </section>
+  </div>
+
+  <section>
+    <h2>Team and contact</h2>
+    <p>Hung Che Nick Lai · hongchelai@gmail.com · Live prototype: <span class="pending">[Cloud Run URL / QR]</span></p>
+  </section>
+
+  <footer>
+    <div class="big">40 min <span>→</span> 90 sec</div>
+    <div class="small">Every conclusion backed by evidence.<br>40 min [pending interviews] · 90 sec [to measure]</div>
+  </footer>
+
+</div>
+</body>
+</html>

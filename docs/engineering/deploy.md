@@ -125,6 +125,19 @@ gcloud run services update $SERVICE --region $REGION --update-env-vars PUBLIC_BA
 - Cloud Run 的 request log 會記下完整網址（含 `?key=...`）。日誌只有專案成員看得到；決賽前後各換一次金鑰即可。
 - 金鑰外洩：照第 4 步換新版本並重新部署，舊 cookie 立即失效。
 
+### 5.3 收尾畫面的人工基準（`MANUAL_BASELINE_MIN`／`MANUAL_BASELINE_SOURCE`，UI v2）
+
+- Recap（工單視窗的 `Show summary` 或按 `S`）的 After 一律是這次調查的實測秒數；Before 只有兩個變數**都**設定、分鐘數在 1–480、出處 ≤120 字時才顯示。任何一個沒設或不合法：`/api/config` 回 `manual_baseline: null`，畫面顯示 `—` 和 `Not yet measured for this plant.`，啟動 log 會有一行 `Recap shows no manual baseline: …` 的 warning（不會擋啟動）。
+- **只能填訪談或實測得到的數字**（Sandy／Felix 提供，storyboard D6），並在 SOURCE 寫出處。沒有真實數字就不要設定。程式與 `.env.example` 都沒有預設值。
+- 出處文字通常含空白和逗號，而 `--update-env-vars` 預設用逗號分隔，所以要換分隔符號（`^@^` 表示改用 `@`）：
+
+  ```bash
+  gcloud run services update $SERVICE --region $REGION \
+    --update-env-vars "^@^MANUAL_BASELINE_MIN=<分鐘數>@MANUAL_BASELINE_SOURCE=<出處，例如訪談場次與月份>"
+  ```
+
+- 確認：`curl -s $URL/api/config` 看到 `"manual_baseline": {"minutes": …, "source": "…"}`。要拿掉：`--remove-env-vars MANUAL_BASELINE_MIN,MANUAL_BASELINE_SOURCE`。
+
 ## 6. 上線後檢查
 
 1. 開 `$URL`，確認**沒有** OFFLINE FIXTURE 黃條，底列顯示 `Agent: <模型名>`。

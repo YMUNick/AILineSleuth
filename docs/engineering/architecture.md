@@ -34,7 +34,7 @@ FastAPI（app/main.py，Cloud Run 單一服務，1 worker）
 | `app/data/sop.md` | 虛構 SOP 片段，直接放進 system prompt（不用 RAG） |
 | `app/queries/` | 5 個固定查詢函式、兩個後端 |
 | `app/agent/` | prompt、Gemini 迴圈、離線 fixture、結論規則 |
-| `app/static/` | 前端；`line-layout.svg` 是 `docs/design/line-layout.svg` 的複本（Dana 改圖時要同步複製） |
+| `app/static/` | 前端；`line-layout.svg` 是 `docs/design/line-layout-v2.svg` 的複本（Dana 改圖時要同步複製）。`app.js` 內含小圖繪製（純內嵌 SVG，無圖表函式庫）、產線圖根因／灰卡狀態與鏡頭拉近、Recap |
 | `scripts/run_regression.py` | 回歸集執行器（只接受 AGENT_MODE=gemini） |
 | `scripts/load_bigquery.py` | 建 dataset/表並上傳 CSV（會建立雲端資源，老闆自己跑） |
 | `tests/` | pytest |
@@ -84,6 +84,7 @@ Quinn 的 `docs/qa/test-plan.md` 可以直接引用這張表；要改題目改 `
 - SQL 是寫死的樣板，只能綁參數；參數先過白名單（line 1–3、machine enum、sensor enum 且要屬於該機台、HH:MM、視窗 ≤ 180 分鐘）。不合法就回錯誤給模型，不猜。
 - **卡片上的數字由程式從原始列算出，不是模型寫的**。模型只能引用 evidence_id。
 - 每次呼叫寫一行 JSON log（函式、參數、筆數、耗時、是否 cached），Cloud Run 會自動進 Cloud Logging（F3 驗收）。
+- **證據小圖資料 `card.chart`（UI v2，`docs/design/ui-v2-spec.md` §1.3）**：和 card 同時、決定性地產生，只給前端畫圖，**不送進 Gemini**，逾時退回快取時跟 card 一起被快取。圖上每個點是 `[HH:MM, 原始值, row_id]`，不平滑、不補值；`limit` 取 catalog 的 SOP 上下限、`baseline` 取基準平均、`marker`／`key_point` 都指回原始列（`tests/test_queries.py` 驗證）。x 軸終點截在情境 now（和 BUG-002 一致）。交班紀錄的事件標籤是固定模板（`Handover 02:30`），**絕不放 message 原文**（R07 有 injection 字串）。
 - 逾時（預設 20 秒）時，如果同一組參數有上次成功的結果就退回並標 `Cached`；沒有就顯示 `Failed`。目前快取在記憶體，重啟會清空。
 
 ## 6. Agent 與結論規則
@@ -110,4 +111,5 @@ Quinn 的 `docs/qa/test-plan.md` 可以直接引用這張表；要改題目改 `
 | 工單編號用 COUNT+1 | 已用行程內鎖序列化；多實例仍會撞號 | max-instances=1 下可接受 |
 | 用輪詢不用 SSE | 每 0.7 秒一個請求 | 夠用，不改 |
 | Gemini 真實呼叫、BigQuery 後端未驗證 | W2/W3 風險 | GCP 開通當天先跑 `tests/test_gemini_live.py` |
-| 前端只做過語法檢查與 API 驗證，沒有在瀏覽器實際點過 | 版面可能要微調 | Dana 視覺驗收時一起看 |
+| 前端只做過語法檢查、API 驗證和 headless Chrome 版面量測（UI v2），沒有人在真的瀏覽器點過 | 版面、動畫時序可能要微調 | 主持人／Dana 照 `ui-v2-spec.md` §8 目視驗收 |
+| Recap 人工基準來自環境變數 `MANUAL_BASELINE_MIN`／`MANUAL_BASELINE_SOURCE`（兩個都設才顯示，見 deploy.md 5.3） | 沒設定時畫面只顯示實測秒數和中性文案 | 等訪談數字（storyboard D6） |

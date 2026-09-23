@@ -21,7 +21,7 @@
 | Roadmap | [docs/roadmap.md](docs/roadmap.md) | Milestones 9/24–10/18, stop-loss points, owner's to-dos | 9/24–10/18 里程碑、停損點、老闆必做事項 | 中文 |
 | Manual / 使用手冊 | [docs/manual/user-manual.md](docs/manual/user-manual.md) | User manual: setup, 90-second walkthrough, presenter mode, troubleshooting, known issues | 使用手冊：安裝、90 秒操作流程、簡報者模式、疑難排解、已知問題（第 12 節為繁中重點） | English（§12 中文） |
 | Pitch / 簡報 | [Pitch script](docs/pitch/pitch-script.md), [Pitch deck outline](docs/pitch/pitch-deck.md), [Judge Q&A](docs/pitch/judge-qa.md), [Submission summary](docs/pitch/submission-summary.md) | 3-minute pitch script, slide outline, judge questions and answers, text for the submission form | 3 分鐘講稿、簡報大綱、評審問答、繳交表單文字 | English |
-| Design / 設計 | [Storyboard](docs/design/storyboard.md), [UI spec](docs/design/ui-spec.md), [Line layout](docs/design/line-layout.svg) | Demo storyboard with the final English UI copy, UI specification, plant layout graphic | 分鏡稿（含最終英文 UI 文案）、UI 規格、產線配置圖 | 中文 |
+| Design / 設計 | [Storyboard](docs/design/storyboard.md), [UI spec](docs/design/ui-spec.md), [UI v2 spec](docs/design/ui-v2-spec.md), [Line layout v2](docs/design/line-layout-v2.svg) | Demo storyboard with the final English UI copy, UI specification (v1, and v2: evidence charts, root cause on the map, breakpoints, Before/After), plant layout graphic | 分鏡稿（含最終英文 UI 文案）、UI 規格（v1，以及 v2：證據小圖、產線圖根因亮燈、斷點、前後對比）、產線配置圖 | 中文 |
 | Engineering / 工程 | [Architecture](docs/engineering/architecture.md), [Deploy](docs/engineering/deploy.md), [Bug-fix changes](docs/engineering/changes-bugfix.md) | System architecture, Cloud Run deployment steps, change notes for BUG-001 to BUG-008 | 架構、Cloud Run 部署步驟、BUG-001～008 變更說明 | 中文 |
 | QA / 測試 | [Test plan](docs/qa/test-plan.md), [Bug list](docs/qa/bugs.md), [Organizer inquiry draft](docs/qa/organizer-inquiry-draft.md) | Test plan, bug list with fix status, draft questions to the organizers | 測試計畫、bug 清單（含修正狀態）、寄給主辦的詢問信草稿 | 中文 |
 | Finance / 財務 | [ROI model notes](docs/finance/roi-model.md), [ROI model (CSV)](docs/finance/roi-model.csv) | How the ROI model works, and the spreadsheet itself | ROI 試算說明、ROI 試算表 | 中文 |
@@ -50,9 +50,9 @@ cp .env.example .env                      # 改 GOOGLE_CLOUD_PROJECT；沒有 GC
 | 4 | Generate the simulated data (fixed seed; also generated automatically at start-up if the files are missing) | 產生模擬資料（固定 seed，啟動時缺檔也會自動產生） |
 | 5 | Start the server | 啟動伺服器 |
 
-**English**: Open http://localhost:8000 . Keyboard: `1` main story, `2` normal data, `R` reset.
+**English**: Open http://localhost:8000 . Keyboard: `1` main story, `2` normal data, `R` reset, `S` Before/After summary (after a root cause is found).
 
-**繁體中文**：打開 http://localhost:8000 。鍵盤 `1` 主線、`2` 正常資料、`R` 重置。
+**繁體中文**：打開 http://localhost:8000 。鍵盤 `1` 主線、`2` 正常資料、`R` 重置、`S` 收尾對比畫面（找到根因後才有作用）。
 
 ### Modes, tests and other commands / 模式、測試與其他指令
 
@@ -90,6 +90,12 @@ cp .env.example .env                      # 改 GOOGLE_CLOUD_PROJECT；沒有 GC
 | `TRUSTED_PROXY_HOPS` | `1` | Which `X-Forwarded-For` entry is the client IP, counted from the right. Keep the default 1 on Cloud Run | 決定取 `X-Forwarded-For` 的哪一段當用戶端 IP（從右數），Cloud Run 用預設 1 |
 | `MAX_CONCURRENT_INVESTIGATIONS` | `3` | Public investigations running at the same time | 公開使用者同時進行的調查上限 |
 | `PRESENTER_KEY` | empty / 空（off / 關閉） | Presenter key (secret), see Presenter mode above | 簡報者金鑰（機密），見上方簡報者模式 |
+| `MANUAL_BASELINE_MIN` | empty / 空 | "Before" minutes on the Recap summary screen (1–480). Only a number from interviews or a measured drill | 收尾畫面 Before 的人工調查分鐘數（1–480），只能填訪談或實測得到的數字 |
+| `MANUAL_BASELINE_SOURCE` | empty / 空 | Where that number comes from (max 120 characters), shown as `Source: …` | 這個數字的出處（最多 120 字），畫面顯示為 `Source: …` |
+
+**English**: The Recap (`Show summary` in the work-order window, or `S`) always shows the measured time of this investigation as "After". "Before" appears only when **both** `MANUAL_BASELINE_*` settings are set and valid; otherwise it shows `—` and "Not yet measured for this plant.", with no bars. There is no default number anywhere in the app. `/api/config` returns `manual_baseline` (`null` when not set).
+
+**繁體中文**：收尾畫面（工單視窗的 `Show summary`，或按 `S`）的 After 一律是這次調查的實測時間；Before 只有在兩個 `MANUAL_BASELINE_*` **都**設定且合法時才顯示，否則顯示 `—` 和「Not yet measured for this plant.」，也不畫長條。程式裡沒有任何預設分鐘數。`/api/config` 會回傳 `manual_baseline`（沒設定時是 `null`）。
 
 **English**: All new settings are documented in [.env.example](.env.example); the change notes are in [changes-bugfix.md](docs/engineering/changes-bugfix.md).
 

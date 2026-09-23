@@ -152,3 +152,42 @@ def test_presenter_skips_rate_limit_and_wrong_key_does_nothing(browsers):
     assert stranger.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 201
     stranger.post("/api/reset", json={})
     assert stranger.post("/api/investigations", json={"scenario_id": "N01"}).status_code == 429
+
+
+# ---------------------------------------------------------------- UI v2: SVG v2, Recap baseline (ui-v2-spec 2, 4.2)
+def test_index_inlines_line_layout_v2(client):
+    html = client.get("/").text
+    assert 'viewBox="0 0 1200 600"' in html and 'id="L2-badge"' in html and 'class="rc-tag"' in html
+    assert 'id="plant-live"' in html and 'id="recap"' in html and 'id="show-summary"' in html
+
+
+def test_steps_carry_chart_data(client):
+    inv = _run(client, "R01")
+    kinds = [s["card"]["chart"]["kind"] for s in inv["steps"]]
+    assert kinds == ["events", "series_limit", "series_baseline", "command_vs_actual", "events"]
+
+
+@pytest.mark.parametrize("minutes,source,expected", [
+    ("", "", None),
+    ("35", "", None),                                   # a number without a source counts as not set
+    ("", "Median of 3 plant-manager interviews", None),
+    ("0", "Interviews", None), ("481", "Interviews", None), ("nan", "Interviews", None), ("abc", "Interviews", None),
+    ("35", "x" * 121, None),
+    ("35", "Median of 3 plant-manager interviews, Sep 2026",
+     dict(minutes=35, source="Median of 3 plant-manager interviews, Sep 2026")),
+    ("12.5", "Stopwatch, 4 drills", dict(minutes=12.5, source="Stopwatch, 4 drills")),
+])
+def test_manual_baseline_needs_valid_minutes_and_a_source(client, monkeypatch, minutes, source, expected):
+    import app.main as m
+    monkeypatch.setattr(m, "settings", dataclasses.replace(m.settings, manual_baseline_min=minutes,
+                                                           manual_baseline_source=source))
+    assert client.get("/api/config").json()["manual_baseline"] == expected
+
+
+def test_no_hard_coded_manual_baseline_in_app():
+    from app.config import ROOT
+    for path in ROOT.rglob("*"):
+        if path.suffix in (".py", ".js", ".html", ".css", ".svg"):
+            text = path.read_text(encoding="utf-8").lower()
+            for banned in ("40 min", "40 minutes", "90 sec"):
+                assert banned not in text, (path, banned)

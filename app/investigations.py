@@ -80,7 +80,7 @@ class _Context:
         except (QueryArgError, TimeoutError) as e:
             with inv.lock:
                 step.update(status="error", error=str(e), card=dict(title=name, tone="normal", key_value="",
-                                                                   key_detail="Query failed", check=None))
+                                                                   key_detail="Query failed", check=None, chart=None))
             return {"evidence_id": step_no, "error": str(e)}
         with inv.lock:
             inv.rows[step_no] = r.rows
@@ -158,6 +158,7 @@ class InvestigationManager:
                 if inv.status == "running":
                     inv.conclusion = conclusion
                     inv.status = conclusion["status"]
+                    inv.finished = time.monotonic()  # the Recap "After" time stops at the conclusion
             log.info(json.dumps({"event": "conclusion", "investigation_id": inv.id, "scenario_id": inv.scenario_id,
                                  "agent_mode": inv.agent_mode, "raw": raw, "status": conclusion["status"],
                                  "root_cause_key": conclusion.get("root_cause_key")}, default=str))

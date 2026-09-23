@@ -3,6 +3,8 @@
 Each call returns a QueryResult: raw rows (every row carries its `row_id`), a compact summary
 for the LLM, and an evidence `card` built deterministically from the rows (the LLM never
 writes the numbers shown on cards, so every number traces back to a source row).
+Cards also carry `chart` (ui-v2-spec 1.3): the same rows as plot points, each with its row_id. It is
+for the front end only and is never sent to the model.
 """
 from __future__ import annotations
 
@@ -175,12 +177,17 @@ def _machine_sensor(args: dict, need_sensor: bool = True) -> tuple[str, str | No
     return machine, sensor
 
 
+def _scenario_now(scenario_id: str) -> datetime:
+    """The scenario's current time (incident.now, ~03:00), to the minute."""
+    inc = (SCENARIOS.get(scenario_id) or {}).get("incident") or {}
+    return datetime.strptime(f"{SCENARIO_DATE} {(inc.get('now') or DATA_END)[:5]}", "%Y-%m-%d %H:%M")
+
+
 def _expected_minutes(scenario_id: str, start: datetime, end: datetime) -> tuple[int, str | None]:
     """Minutes in [start, end] that should already have a reading. Minutes after the scenario's current
     time (incident.now, ~03:00) have not happened yet, so they are not "missing" (BUG-002).
     Returns (expected, cut) where cut is "HH:MM" when the window reaches past that time, else None."""
-    inc = (SCENARIOS.get(scenario_id) or {}).get("incident") or {}
-    now = datetime.strptime(f"{SCENARIO_DATE} {(inc.get('now') or DATA_END)[:5]}", "%Y-%m-%d %H:%M")
+    now = _scenario_now(scenario_id)
     last = min(end, now)
     expected = int((last - start).total_seconds() // 60) + 1 if last >= start else 0
     return expected, (f"{now:%H:%M}" if end > now else None)
@@ -208,6 +215,53 @@ def _pt(row: dict) -> dict:
     return {"row_id": row["row_id"], "ts": hm(row["ts"]), "value": row["value"]}
 
 
+# ---------------------------------------------------------------- chart data (front end only, ui-v2-spec 1.3)
+# Every plotted value is a raw row value with its row_id; labels only repeat numbers already on the card
+# (SOP limit, baseline mean, "since" time) or raw row values. Free text from rows never goes into a label.
+def _points(rows: list[dict]) -> list[list]:
+    return [[hm(r["ts"]), r["value"], r["row_id"]] for r in rows]
+
+
+def _series_x(scenario_id: str, start: datetime, end: datetime) -> dict:
+    """x axis = query window, cut at the scenario's current time (later minutes are not missing, BUG-002)."""
+    x_end = max(start, min(end, _scenario_now(scenario_id)))
+    return dict(x_start=f"{start:%H:%M:%S}", x_end=f"{x_end:%H:%M:%S}")
+
+
+def _since(row: dict | None) -> dict | None:
+    return dict(ts=hm(row["ts"]), label=f"since {hm(row['ts'])}", row_id=row["row_id"]) if row else None
+
+
+def _key_point(row: dict | None) -> dict | None:
+    return dict(ts=hm(row["ts"]), value=row["value"], row_id=row["row_id"]) if row else None
+
+
+_LOG_EVENTS = {"parameter_change": ("notable", "Parameter change"), "maintenance": ("notable", "Maintenance"),
+               "material_change": ("notable", "Material change"), "shift_handover": ("info", "Handover")}
+
+
+def _alarm_event(r: dict) -> dict:
+    t = hm(r["ts"])
+    if r["severity"] == "critical":
+        level, label = "critical", (f"Trip {t}" if str(r["code"]).endswith("_TRIP") else f"Critical {t}")
+    elif r["severity"] == "warning":
+        level, label = "warning", f"Warning {t}"
+    else:  # not in the data today; still a fixed template, never the message text
+        level, label = "info", f"Alarm {t}"
+    return dict(ts=hms(r["ts"]), level=level, label=label, row_id=r["row_id"])
+
+
+def _log_event(r: dict) -> dict:
+    level, name = _LOG_EVENTS.get(r["event_type"], ("info", "Note"))
+    return dict(ts=hms(r["ts"]), level=level, label=f"{name} {hm(r['ts'])}", row_id=r["row_id"])
+
+
+def _events_chart(rows: list[dict], start: datetime, end: datetime, make, empty_label: str) -> dict:
+    return dict(kind="events", x_start=f"{start:%H:%M:%S}",
+                x_end=f"{end + timedelta(seconds=59):%H:%M:%S}",  # same bound as the SQL
+                events=[make(r) for r in rows], empty_label=empty_label)
+
+
 # ---------------------------------------------------------------- the five functions
 def _get_alarm_events(backend: QueryBackend, scenario_id: str, args: dict) -> QueryResult:
     line = _line(args)
@@ -231,6 +285,7 @@ def _get_alarm_events(backend: QueryBackend, scenario_id: str, args: dict) -> Qu
         card = dict(title="Alarm events", tone="normal", key_value="0",
                     key_detail=f"No alarms {start:%H:%M}–{end:%H:%M}", highlight_row_ids=[],
                     check=("Alarm events", "none in window"))
+    card["chart"] = _events_chart(rows, start, end, _alarm_event, "No alarms")
     return _result("get_alarm_events", args, rows, summary, card, start, end)
 
 
@@ -251,9 +306,18 @@ def _get_sensor_window(backend: QueryBackend, scenario_id: str, args: dict) -> Q
     summary: dict[str, Any] = {"sensor": sensor, "unit": unit, "normal_range": [lo, hi], "sop": sop,
                                "rows": len(main), "missing_minutes": missing, **_future_note(cut)}
     check_name = label
+    is_valve = sensor == "cv_position_pct"
+    chart: dict[str, Any] = dict(
+        kind="command_vs_actual" if is_valve else "series_limit", unit=unit, **_series_x(scenario_id, start, end),
+        series=[dict(role="actual", points=_points(main))]
+               + ([dict(role="command", points=_points(cmd))] if is_valve and cmd else []),
+        limit=None, band=None if is_valve else dict(low=lo, high=hi), marker=None, key_point=None,
+        empty_label="No data")
+    if is_valve and cmd:
+        chart["command_label"] = f"Commanded {_fmt(cmd[-1]['value'])}%"  # same value as "commanded 80%"
     if not main:
         card = dict(title=label, tone="normal", key_value="No data", key_detail="No readings in window",
-                    highlight_row_ids=[], check=(check_name, "no data in window"))
+                    highlight_row_ids=[], check=(check_name, "no data in window"), chart=chart)
         return _result("get_sensor_window", args, rows, summary, card, start, end)
 
     mx = max(main, key=lambda r: r["value"])
@@ -266,11 +330,14 @@ def _get_sensor_window(backend: QueryBackend, scenario_id: str, args: dict) -> Q
     if cmd:
         summary["command_series"] = [[hm(r["ts"]), r["value"]] for r in cmd]
     gap = f" · {missing} min of data missing" if missing else ""
+    limit = None
     if high:
+        limit, marker, key = dict(side="high", value=hi, label=f"SOP limit {_fmt(hi)} {unit}"), high, mx
         card = dict(tone="warn", key_value=f"{_fmt(mx['value'])} {unit}".replace(" %", "%"),
                     key_detail=f"Above {sop} limit of {_fmt(hi)} {unit} since {hm(high['ts'])}{gap}",
                     highlight_row_ids=[high["row_id"], mx["row_id"]], check=(check_name, "above limit"))
     elif low:
+        limit, marker, key = dict(side="low", value=lo, label=f"SOP limit {_fmt(lo)} {unit}"), low, mn
         if cmd:
             detail = f"Below normal range since {hm(low['ts'])} · commanded {_fmt(cmd[-1]['value'])}%"
         else:
@@ -280,10 +347,12 @@ def _get_sensor_window(backend: QueryBackend, scenario_id: str, args: dict) -> Q
                     + ([cmd[-1]["row_id"]] if cmd else []), check=(check_name, "below limit"))
     else:
         last = main[-1]
+        marker, key = None, last
         card = dict(tone="normal", key_value=f"{_fmt(last['value'])} {unit}".replace(" %", "%"),
                     key_detail=f"Within {sop} range{gap}", highlight_row_ids=[last["row_id"]],
                     check=(check_name, "within normal range" + (f", {missing} min missing" if missing else "")))
-    card["title"] = label
+    chart.update(limit=None if is_valve else limit, marker=_since(marker), key_point=_key_point(key))
+    card.update(title=label, chart=chart)
     return _result("get_sensor_window", args, rows, summary, card, start, end)
 
 
@@ -306,10 +375,13 @@ def _compare_to_baseline(backend: QueryBackend, scenario_id: str, args: dict) ->
                                "baseline_window": f"{b_start:%H:%M}-{b_end:%H:%M}", "baseline_rows": len(base),
                                "window_rows": len(win), "missing_minutes": missing, **_future_note(cut)}
     title = f"{label} vs. baseline"
+    chart: dict[str, Any] = dict(kind="series_baseline", unit=unit, **_series_x(scenario_id, start, end),
+                                 series=[dict(role="actual", points=_points(win))],  # window only, not the baseline
+                                 band=None, baseline=None, marker=None, key_point=None, empty_label="No data")
     if not base or not win:
         card = dict(title=title, tone="normal", key_value="No data",
                     key_detail="Not enough readings to compare" + (f" · {missing} min of data missing" if missing else ""),
-                    highlight_row_ids=[], check=(label, "no data to compare"))
+                    highlight_row_ids=[], check=(label, "no data to compare"), chart=chart)
         summary["note"] = "insufficient data for comparison"
         return _result("compare_to_baseline", args, rows, summary, card, start, end)
 
@@ -337,7 +409,10 @@ def _compare_to_baseline(backend: QueryBackend, scenario_id: str, args: dict) ->
                     key_detail=("of baseline" if use_pct else "from baseline") + f" · within normal variation{gap}",
                     highlight_row_ids=[extreme["row_id"]],
                     check=(label, "within normal range" + (f", {missing} min missing" if missing else "")))
-    card.update(title=title, secondary=secondary)
+    chart.update(band=dict(low=round(b_mean - threshold, 2), high=round(b_mean + threshold, 2)),
+                 baseline=dict(value=b_mean, label=f"Baseline {_fmt(b_mean)} {unit}"),
+                 marker=_since(dev_start), key_point=_key_point(extreme))
+    card.update(title=title, secondary=secondary, chart=chart)
     return _result("compare_to_baseline", args, rows, summary, card, start, end)
 
 
@@ -371,7 +446,8 @@ def _get_shift_log(backend: QueryBackend, scenario_id: str, args: dict) -> Query
     highlight = [r["row_id"] for r in rows if r["event_type"] in names] or ([handover["row_id"]] if handover else [])
     card = dict(title="Shift & maintenance log", tone="warn" if "parameter_change" in counts else "normal",
                 key_value=key, key_detail=detail, highlight_row_ids=highlight,
-                check=("Shift & maintenance log", check_result))
+                check=("Shift & maintenance log", check_result),
+                chart=_events_chart(rows, start, end, _log_event, "No log entries"))  # labels never hold message text
     return _result("get_shift_log", args, rows, summary, card, start, end)
 
 
@@ -381,7 +457,7 @@ def _list_sensors(backend: QueryBackend, scenario_id: str, args: dict) -> QueryR
     summary = {"machine": machine, "sensors": [dict(sensor=r["sensor"], unit=r["unit"], normal_low=r["normal_low"],
                                                     normal_high=r["normal_high"], sop=r["sop_section"]) for r in rows]}
     card = dict(title="Sensor catalog & SOP limits", tone="normal", key_value=f"{len(rows)} sensors",
-                key_detail=MACHINES[machine], highlight_row_ids=[], check=None)
+                key_detail=MACHINES[machine], highlight_row_ids=[], check=None, chart=None)
     return _result("list_sensors", args, rows, summary, card, None, None)
 
 

@@ -5,6 +5,7 @@
 - 搭配：`docs/design/storyboard.md`（分鏡與文案定稿）、`docs/design/line-layout.svg`（產線圖）
 - 沒有 Figma，這份就是設計稿。工程師照 token 與尺寸實作即可；數字寫死在這裡，不要自己調。
 - 只有一套深色主題（大螢幕與手機共用），不做淺色模式。
+- **v2 更新（2026-09-24）**：證據小圖、根因在產線圖上亮起、斷點、Before/After 收尾見 `docs/design/ui-v2-spec.md`。以下各節有標「→ v2」的地方以 v2 為準；token 只新增、不改 v1 既有值（字級在較小斷點另外覆寫）。
 
 ## 0. 設計原則（衝突時照這個順序取捨）
 
@@ -165,11 +166,12 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 
 ### 3.2 產線 SVG 與機台狀態（F1）
 
-- 檔案：`docs/design/line-layout.svg`。**必須 inline 進 HTML**（不能用 `<img>`），JS 才改得到 class。
+- → v2：改用 `docs/design/line-layout-v2.svg`（viewBox 1200×600、字級放大、新增 `ROOT CAUSE` 標籤、灰卡車道徽章、鏡頭拉近），見 v2 §2。下面的 ID 規則不變。
+- 檔案：`docs/design/line-layout.svg`（v1，已被 v2 取代）。**必須 inline 進 HTML**（不能用 `<img>`），JS 才改得到 class。
 - 每台機台是 `<g id="L{線}-M{機}" class="machine is-normal">`，例：`L2-M3`。
 - 每條線是 `<g id="L{線}" class="lane">`，停線時加 `is-stopped`（線框變紅、狀態字變紅粗體）；線狀態文字 `id="L{線}-status"`。
 - 每台機台狀態文字 `id="L{線}-M{機}-state"`，JS 改 class 時要**同時**改這段文字。
-- 各線 M3 有冷卻閥標記 `id="L{線}-M3-CV{線}"`（例 `L2-M3-CV2`），class `valve`；結論指到它時加 `is-fault`。
+- 各線 M3 有冷卻閥標記 `id="L{線}-M3-CV{線}"`（例 `L2-M3-CV2`），class `valve`；結論指到它時加 `is-root-cause`（→ v2 §2.2；v1 的 `is-fault` 紅色已取消，根因一律用琥珀，紅色只代表停線）。
 
 | class | 外框 | 狀態燈 | 機台底 | 狀態文字（textContent） | 何時用 |
 |---|---|---|---|---|---|
@@ -179,7 +181,7 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 | `is-idle` | idle 2px 虛線 | idle | machine-body | `IDLE` | 選用 |
 | `is-focus` | 外加 info 3px 虛線框 | 不變 | 不變 | 不變 | 調查進行中，疊加在其他 class 上 |
 
-- 不做動畫（PRD F1）。唯一的例外：`is-stopped` 的狀態燈可以 1 Hz 閃爍，但 `prefers-reduced-motion` 時關閉。若時間緊就不做。
+- 不做裝飾性動畫（PRD F1）。→ v2 只允許三種：調查時鏡頭拉近、調查中焦點框的 marching ants、根因閥門脈動 3 次，`prefers-reduced-motion` 時全部關閉（v2 §2.4、§5）。v1 提到的停線燈號閃爍不做。
 - 線狀態 `L2-status` 文字：`Running` / `Stopped · 00:12`（計時放在 Alert banner，不必每秒改 SVG，這裡只寫 `Stopped`）。
 - 右下 legend（HTML，不放 SVG 裡）：三個圓點＋文字 `Running` `Warning` `Stopped`，16px。
 
@@ -191,10 +193,11 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 | 正常 | surface-2，左邊 6px success | `All lines running`＋`No active alarms` | Investigate 按鈕（文案見分鏡：`Investigate Line 1`） |
 
 - 計時器從情境的停線時間開始算，每秒更新；調查完成後**不停**（停線還在繼續，這才是真的）。
+- → v2 §3.3：banner 改用 CSS grid，依斷點排成單行、三區或直排；計時器字級依斷點是 64／44／40px。上表的「高 96px」改成最小高度。
 
 ### 3.4 Investigate 按鈕（F2）
 
-- 高 64px，最小寬 240px，padding 0 `--space-6`，radius-md。
+- 高 64px，最小寬 240px，padding 0 `--space-6`，radius-md。（→ v2：1599 以下改成高 56、最小寬 232／220，文字不換行）
 - 預設：warn 實心底，text-on-accent 字，22px / 700，左側放大鏡 icon 24px。
 - Hover：亮度 +8%（`filter: brightness(1.08)`）。
 - Focus：`--focus-ring`（鍵盤操作與簡報遙控器要看得見）。
@@ -218,6 +221,7 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 
 - 空狀態（未開始）：面板中央 18px text-secondary 文字，內容見分鏡。
 - 內容區可捲動；新卡片出現時自動捲到最新卡片（使用者手動往上捲時暫停自動捲動）。
+- → v2 §3.4：結論卡／灰卡改放在面板**頂端**而且固定不動，下面才是證據列（證據列自己捲動）；證據卡依 v2 §1.8 收成精簡列。
 
 ### 3.6 證據卡 Evidence card（F4）
 
@@ -250,7 +254,7 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 
 進場：opacity 0→1、translateY 8px→0，`--motion-base`。reduced-motion 時直接出現。
 
-選配（時間夠才做）：溫度／流量卡在數值右邊加 160×40 的 sparkline（info 線、warn 虛線表示 SOP 上限）。沒有也不影響 demo。
+~~選配 sparkline~~ → v2 §1：證據小圖改成**必做**，四種圖放在關鍵數值下方、寬度撐滿卡片；另外有精簡列用的迷你圖。資料來自後端 `card.chart`。
 
 ### 3.7 結論卡 Conclusion card（F5）
 
@@ -264,6 +268,7 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
   6. `Recommended actions` 有序清單 18px
   7. 右下：`Create work order` 按鈕（outline：2px warn 外框、warn 字、高 56px）
 - 規則（PRD F5）：引用少於 2 張證據卡時**不渲染結論卡**，改走灰卡。
+- → v2 §3.6：結論卡放在面板頂端；螢幕高度 ≤959 時用 compact 版（`Recommended actions` 收成可展開按鈕，和 `Create work order` 放同一行）。產線圖同步亮起的規則見 v2 §2。
 
 信心標籤 Confidence label：
 
@@ -292,7 +297,7 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 - 左：QR 區塊 ＝ 白底 `#FFFFFF` 方塊 320×320（內含 QR 280×280＋20px quiet zone），radius-md。QR 黑 `#000000`，錯誤修正等級 M。
 - QR 下方：`Scan to open on your phone`（22/600）與短網址（18, font-mono, text-secondary），例 `ls.run/wo/0001`，給掃不到的人手打。
 - 右：工單摘要：`Work order created`（success 勾＋28/700）、工單號 `WO-0001`、Line/Machine、Root cause、Priority chip。
-- 右下：`Done` outline 按鈕，Esc 也能關。
+- 右下：`Done` outline 按鈕，Esc 也能關。（→ v2 §4.4：改成 `Done` 文字按鈕＋`Show summary` outline 按鈕，後者會開啟 Before/After 收尾畫面）
 - 工單建立失敗：modal 內改顯示 danger 文字 `Could not create work order. Try again.`＋`Try again` 按鈕。
 
 ### 3.10 情境切換與重置（F8）
@@ -301,6 +306,10 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 - 內容：`Scenario:` 下拉（`Line 2 over-temperature` / `Normal data (Line 1)`）＋ 文字按鈕 `Reset`。
 - 切換情境即自動重置。Reset 需在調查進行中也可按（中止並清空），不跳確認視窗。
 - 鍵盤快捷鍵（給簡報者）：`R` = Reset、`1` = 主線情境、`2` = 正常情境。
+
+### 3.10a Before/After 收尾畫面（Recap）
+
+→ v2 §4。After＝這次實測的調查秒數；Before＝環境變數 `MANUAL_BASELINE_MIN`＋`MANUAL_BASELINE_SOURCE`，沒設定就顯示 `—` 和中性文案。畫面上不寫死任何基準數字。
 
 ### 3.11 手機工單頁（F7）
 
@@ -339,7 +348,7 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 - 左欄約 1060px：banner＋SVG（SVG 高度由寬度決定，viewBox 1200×640 → 約 565px 高）。
 - 右欄約 780px：面板高度填滿 TopBar 與底列之間（約 900px），內部捲動。
 - 底列高 48px。
-- 小於 1440px 寬（筆電練習用）：同樣兩欄，字級不變，SVG 自動縮小；小於 1100px 不支援（demo 不會用到，別花時間做）。
+- ~~小於 1440px 寬同樣兩欄；小於 1100px 不支援~~ → v2 §3：四段斷點（≥1600／1280–1599／1024–1279／<1024 單欄堆疊）＋矮螢幕修飾。主持人在 758px 實測時，按鈕被蓋住、計時器溢出，就是因為原本沒有處理窄螢幕。1280×720 和 1366×768 投影機必須整頁不捲動。
 - 投影前檢查：瀏覽器縮放 100%、全螢幕（F11），不要有書籤列。
 
 ### 4.2 手機工單頁（設計基準 390×844，支援 360–430 寬）
@@ -386,6 +395,8 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 
 ## 5. 可及性檢查清單（實作後由 Quinn 順手抽查）
 
+→ v2 §7、§8F 有新增項目（圖的 aria-label、Recap 對話框、`S` 快捷鍵、色盲模擬）。下面是 v1 原有的清單，仍然有效（Tab 順序以 v2 §7.3 為準）。
+
 - [ ] 所有狀態同時有顏色與文字（機台、chip、證據卡、信心標籤）
 - [ ] Tab 順序：Investigate → 證據卡展開按鈕（依序）→ 引用 chip → Create work order → 情境切換
 - [ ] 可見 focus ring（`--focus-ring`）
@@ -402,4 +413,5 @@ Inter 用 Google Fonts 載入 400/500/600/700 四個字重，`display=swap`。
 - 深淺色切換、多語系切換（越南文只在 pitch 示意圖）
 - 登入頁、首頁行銷頁（網址打開直接就是產線畫面）
 - 工單頁的勾選狀態儲存、指派人、留言
-- 產線圖動畫（除 §3.2 可選的狀態燈閃爍）
+- 產線圖動畫（v2 允許的只有：鏡頭拉近、調查中 marching ants、根因脈動 3 次）
+- （v2 追加）圖表函式庫、座標軸與格線、hover tooltip、數字跳動動畫、自動彈出 Recap、「快 N 倍」字樣

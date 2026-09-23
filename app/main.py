@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import hmac
+import io
 import json
 import logging
 import re
@@ -20,7 +21,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Resp
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from app.config import STATIC_DIR, get_settings
+from app.config import STATIC_DIR, get_settings, manual_baseline
 from app.data.catalog import MACHINES
 from app.data.scenarios import DEMO_SCENARIOS, SCENARIOS
 from app.investigations import InvestigationManager
@@ -32,6 +33,8 @@ log = logging.getLogger("linesleuth.api")
 settings = get_settings()
 backend = make_backend(settings)
 manager = InvestigationManager(settings, backend)
+if (_baseline_problem := manual_baseline(settings)[1]):
+    log.warning("Recap shows no manual baseline: %s (see .env.example)", _baseline_problem)
 
 app = FastAPI(title="LineSleuth", docs_url="/api/docs", openapi_url="/api/openapi.json")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -143,7 +146,8 @@ def config(request: Request) -> dict:
     return dict(agent_mode=settings.agent_mode, offline_fixture=settings.agent_mode == "offline_fixture",
                 model=settings.gemini_model if settings.agent_mode == "gemini" else None,
                 query_backend=backend.name, source_prefix=backend.source_prefix,
-                presenter=_is_presenter(request))
+                presenter=_is_presenter(request),
+                manual_baseline=manual_baseline(settings)[0])  # null unless minutes AND source are set
 
 
 @app.get("/api/scenarios")
@@ -243,8 +247,11 @@ def work_order_qr(wo_id: str, request: Request) -> Response:
     if not WO_ID.match(wo_id):
         raise HTTPException(404, "Work order not found")
     qr = segno.make(_wo_url(request, wo_id), error="m")
-    svg = qr.svg_inline(scale=8, border=0, dark="#000000", light="#FFFFFF")
-    return Response(svg, media_type="image/svg+xml")
+    # Served as a standalone image (<img src>), so the SVG namespace is required;
+    # svg_inline() always omits it and browsers then render nothing.
+    buf = io.BytesIO()
+    qr.save(buf, kind="svg", scale=8, border=0, dark="#000000", light="#FFFFFF", xmldecl=False)
+    return Response(buf.getvalue(), media_type="image/svg+xml")
 
 
 class ResetBody(BaseModel):

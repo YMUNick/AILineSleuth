@@ -4,6 +4,7 @@
 - 來源：閱讀 `app/`、`scripts/` 程式＋離線實測（`.venv` 內 pytest、TestClient、DuckDB）。**沒有碰到真 Gemini、BigQuery、Cloud Run、瀏覽器。**
 - 我沒有改任何 `app/` 程式。標 `xfail` 的測試在 `tests/test_qa_adversarial.py`，用 `strict=True`：修好後測試會變成 XPASS→失敗，請順手拿掉該測試的 `@pytest.mark.xfail`。
 - **2026-09-24 Eddie 修正結果**：BUG-001～008 全部 Fixed，strict xfail 已全部拿掉；`pytest` 87 passed、1 skipped（真 Gemini）、0 xfailed。變更說明給 PM：`docs/engineering/changes-bugfix.md`。BUG-003、004 的雲端行為要照 `docs/engineering/deploy.md` 5.1、5.2 上線後實測。
+- **2026-09-24 UI v2 驗收（Quinn）**：新增 `tests/test_ui_v2_contract.py`（89 條）。新開 BUG-009，strict xfail ×4（這次照 BUG-006 的建議都加了 `raises=`，測試自己壞掉不會被吞掉）。整體 `pytest` 196 passed、1 skipped、4 xfailed。
 - 嚴重度：**High**＝會讓 demo 翻車、違反 PRD 驗收或費用失控；**Medium**＝demo 上看得到、傷信任；**Low**＝機率低或只影響回歸集。
 
 | ID | 嚴重度 | 標題 | 自動化測試 | 建議期限 | 狀態（9/24 Eddie） |
@@ -16,6 +17,7 @@
 | BUG-006 | Low | 模型輸出型別不對時沒擋（字串被拆成字元、list 造成當機） | xfail | 10/10 | Fixed |
 | BUG-007 | Low | 模擬資料的百分比感測器超過 100% | xfail | 10/8 | Fixed |
 | BUG-008 | Low | `line` 參數接受 `True`、`2.7`、`"2"` | 無 | 有空再做 | Fixed |
+| BUG-009 | Low | 感測值是 NULL 或後端丟出非預期錯誤時，查詢當掉、那一步永遠停在 running | xfail ×4 | 10/13（接 BigQuery 前） | Open |
 | ENH-001～005 | — | 回歸執行器門檻、token 記錄、Gemini 逾時、執行緒池、補情境 | — | 見下 | 未處理（不在本次範圍） |
 
 ---
@@ -113,6 +115,21 @@
 - **狀態：Fixed**（Eddie 9/24）。接受 int 與整數值的 float（`2.0`）；`True`、`2.7`、字串 `"2"` 都回 `QueryArgError` 給模型重填，不猜。
   - 修改：`app/queries/functions.py` `_line()`。
   - 測試：`tests/test_queries.py` 的 `test_bad_arguments_are_rejected` 加三組、新增 `test_integral_float_line_is_accepted`。
+
+## BUG-009（Low）感測值是 NULL 或後端丟出非預期錯誤時，查詢當掉、那一步永遠停在 running
+
+- **位置**：`app/queries/functions.py` `_get_sensor_window`（`max()`／`min()`、和上下限比大小）、`_compare_to_baseline`（基準平均 `sum()`、`abs(value − 平均)`）；`app/investigations.py` `_Context.call_tool` 只接 `QueryArgError`、`TimeoutError`。
+- **重現**（離線，包一層後端，把某一分鐘的 `value` 改成 `None`）：
+  1. R01 `get_sensor_window(mold_temp_c)`，02:45 那筆是 NULL → `TypeError: '>' not supported between instances of 'NoneType' and 'float'`。
+  2. N01 `compare_to_baseline(coolant_flow_lpm)`，時間窗內 02:45 是 NULL → `TypeError`。R01 同樣位置**剛好不會當**，因為 02:41 已經找到偏離、迴圈提早結束，是運氣。
+  3. R01 `compare_to_baseline`，基準期 01:30 是 NULL → 算平均時 `TypeError`。
+  4. 後端丟 `RuntimeError`（模擬 BigQuery 503／權限／配額錯誤）→ 整個調查 `failed`（這點誠實、可以接受），但 `inv.steps` 裡那一步停在 `status: "running"`、`card: null`。
+- **畫面上的影響**：失敗後那張卡還是轉圈的 `Querying…` 加 skeleton，看起來像還在查；失敗訊息直接印 Python 例外字串（例：`TypeError: '>' not supported…`）。
+- **為什麼要修**：ui-v2-spec §1.3 的圖表合約寫明 `value` 可以是 `null`（缺值斷線），前端 `segmentsOf()` 也已經支援，只有後端做不到。Demo 資料目前 0 筆 NULL，所以是 Low；但接真實工廠資料（roadmap 試點）一定會碰到，而 BigQuery 的暫時性錯誤在雲端 demo 就可能碰到。
+- **建議**：
+  1. 查詢函式把 NULL 當缺值：圖上保留 `[時間, null, row_id]`；算 max／min／平均／越限／偏離時跳過 NULL；缺幾分鐘的計算把 NULL 算進去。
+  2. `call_tool` 接住其他例外：該步改成 `error`（`Query failed`、`chart: null`，和逾時又沒有快取時一樣），錯誤回給模型；調查要 failed 的話，也要先把 running 的步驟改掉。畫面上的失敗訊息用短句，詳細的例外寫進 log。
+- **測試**：`tests/test_ui_v2_contract.py` 的 `test_null_reading_is_a_gap_not_a_crash`（3 組，`raises=TypeError`）、`test_unexpected_query_error_never_leaves_a_step_running`（`raises=AssertionError`）。修好後會 XPASS，請拿掉 xfail。
 
 ---
 
