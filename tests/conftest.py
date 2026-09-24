@@ -1,7 +1,17 @@
 import os
 import socket
+from pathlib import Path
 
 import pytest
+
+# Pin every setting to the .env.example defaults so a developer's local .env (loaded by
+# app.config via load_dotenv, which never overrides existing variables) cannot change test
+# expectations. Live Gemini runs keep the local .env for the project and model.
+if os.environ.get("RUN_GEMINI_TESTS") != "1":
+    for _line in (Path(__file__).resolve().parents[1] / ".env.example").read_text(encoding="utf-8").splitlines():
+        _key, _sep, _value = _line.partition("=")
+        if _sep and _key.strip() and not _key.lstrip().startswith("#"):
+            os.environ[_key.strip()] = _value.strip()
 
 # Tests never call Vertex AI unless explicitly asked (see test_gemini_live.py).
 os.environ["AGENT_MODE"] = "offline_fixture"
