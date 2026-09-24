@@ -118,6 +118,8 @@ Set `QUERY_BACKEND` in `.env`.
 | `QUERY_BACKEND` | `local` | See 3.4 |
 | `GEMINI_MODEL` | `gemini-3-flash-preview` | Model ID. **Not yet verified**: confirm the current ID in Vertex AI Model Garden before the demo. |
 | `STEP_TIMEOUT_S` | `20` | A query slower than this falls back to the last verified result (`Cached`) or fails |
+| `GEMINI_MAX_RETRIES` | `2` | How many times a Gemini call that timed out, hit 429 or a 5xx error is retried, **per investigation in total** (0-5). After that the investigation ends as `Investigation failed`; it never retries forever. |
+| `GEMINI_RETRY_BACKOFF_S` | `2` | Wait before the first retry, doubled for each next one (2 s, 4 s) |
 | `INVESTIGATION_TIMEOUT_S` | `90` | An investigation longer than this ends as `Investigation failed`. It is never replaced by a made-up answer. |
 | `RATE_LIMIT_PER_HOUR` | `20` | Maximum investigations started per IP address per hour |
 | `GLOBAL_RATE_LIMIT_PER_HOUR` | `60` | Maximum investigations started per hour by all public users together. This is the real cost ceiling; Felix sets the final value once the cost per investigation is measured (ENH-002). |

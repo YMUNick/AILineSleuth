@@ -13,7 +13,7 @@ import uuid
 from datetime import datetime, timezone
 
 from app.agent.conclusion import finalize
-from app.agent.gemini_agent import run_gemini
+from app.agent.gemini_agent import new_usage, run_gemini
 from app.agent.offline_fixture import run_fixture
 from app.config import Settings
 from app.data.scenarios import SCENARIOS
@@ -42,6 +42,7 @@ class Investigation:
         self.conclusion: dict | None = None
         self.error: str | None = None
         self.work_order_id: str | None = None
+        self.usage = new_usage(settings.agent_mode)  # Gemini turns / retries / tokens (ENH-002); None = offline
         self.started = time.monotonic()
         self.finished: float | None = None
         self.cancel_event = threading.Event()
@@ -52,7 +53,19 @@ class Investigation:
             elapsed = (self.finished or time.monotonic()) - self.started
             return dict(id=self.id, scenario_id=self.scenario_id, status=self.status, agent_mode=self.agent_mode,
                         model=self.model, elapsed_s=round(elapsed, 1), steps=[dict(s) for s in self.steps],
-                        conclusion=self.conclusion, error=self.error, work_order_id=self.work_order_id)
+                        conclusion=self.conclusion, error=self.error, work_order_id=self.work_order_id,
+                        usage=dict(self.usage))
+
+
+# Short text for the step and the model; the exception itself only goes to the log (BUG-009).
+QUERY_BACKEND_ERROR = "Query failed on the data backend (not an argument problem). No data from this step."
+
+
+def _fail_step(inv: Investigation, step: dict, error: str) -> None:
+    """A step that did not produce a card: status error, "Query failed", no chart (ui-v2-spec 1.6)."""
+    with inv.lock:
+        step.update(status="error", error=error, card=dict(title=step["function"], tone="normal", key_value="",
+                                                           key_detail="Query failed", check=None, chart=None))
 
 
 class _Context:
@@ -68,6 +81,18 @@ class _Context:
         if time.monotonic() > self._deadline:
             raise TimeoutError("Investigation exceeded its time budget")
 
+    def wait(self, seconds: float) -> None:
+        """Retry backoff: sleeps, but wakes up at once on cancel and never past the investigation deadline."""
+        self._inv.cancel_event.wait(max(0.0, min(seconds, self._deadline - time.monotonic())))
+        self.check()
+
+    def add_usage(self, **counts: int) -> None:
+        """Adds Gemini counts (turns, retries, tokens) to the investigation's totals (ENH-002)."""
+        with self._inv.lock:
+            u = self._inv.usage
+            for k, v in counts.items():
+                u[k] = (u.get(k) or 0) + v
+
     def call_tool(self, name: str, args: dict) -> dict:
         self.check()
         inv = self._inv
@@ -78,10 +103,13 @@ class _Context:
         try:
             r = self._executor.execute(inv.scenario_id, name, args, inv.id)
         except (QueryArgError, TimeoutError) as e:
-            with inv.lock:
-                step.update(status="error", error=str(e), card=dict(title=name, tone="normal", key_value="",
-                                                                   key_detail="Query failed", check=None, chart=None))
+            _fail_step(inv, step, str(e))
             return {"evidence_id": step_no, "error": str(e)}
+        except Exception as e:  # backend error (e.g. BigQuery 503 / quota): this step fails, the rest goes on (BUG-009)
+            log.exception(json.dumps({"event": "query_error", "investigation_id": inv.id, "step": step_no,
+                                      "function": name, "error": f"{type(e).__name__}: {e}"}, default=str))
+            _fail_step(inv, step, QUERY_BACKEND_ERROR)
+            return {"evidence_id": step_no, "error": QUERY_BACKEND_ERROR}
         with inv.lock:
             inv.rows[step_no] = r.rows
             step.update(status="cached" if r.cached else "done", card=r.card, query_id=r.query_id,
@@ -173,6 +201,13 @@ class InvestigationManager:
         finally:
             with inv.lock:
                 inv.finished = inv.finished or time.monotonic()
+                left = [s for s in inv.steps if s["status"] == "running"]
+            for s in left:  # safety net: a finished investigation never shows a spinning "Querying…" card (BUG-009)
+                _fail_step(inv, s, "Investigation ended before this query finished")
+            # one line per investigation for the cost estimate (ENH-002); counts are null in OFFLINE FIXTURE
+            log.info(json.dumps({"event": "usage", "investigation_id": inv.id, "scenario_id": inv.scenario_id,
+                                 "agent_mode": inv.agent_mode, "model": inv.model, "status": inv.status,
+                                 **inv.public()["usage"]}))
 
     # ---------------------------------------------------------------- work orders
     def create_work_order(self, inv: Investigation) -> dict:

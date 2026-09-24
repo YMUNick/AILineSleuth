@@ -108,7 +108,7 @@ label 由後端組好，是固定模板，**絕對不能**把交班紀錄的 mes
 | | XL ≥1600 | L 1280–1599 | M 1024–1279 | S <1024 |
 |---|---|---|---|---|
 | 完整圖 | 寬 100%（卡片內容寬）× 高 `--chart-h` 96px | 100% × 72px | 100% × 72px | 100% × 72px |
-| 迷你圖 | 120 × 32 | 96 × 28 | 96 × 28 | 96 × 28 |
+| 迷你圖 | 160 × 44（A1，9/24 由 120 × 32 放大） | 96 × 28 | 96 × 28 | 96 × 28 |
 | 資料線寬 | 2.5px | 2.5px | 2.5px | 2.5px（迷你圖 2px） |
 | 標籤字 | 16px / 600 | 16px / 600 | 16px / 600 | 16px / 600 |
 
@@ -254,7 +254,7 @@ events：#1 Alarm events（tone danger）
 ### 2.1 SVG v2 改了什麼（`docs/design/line-layout-v2.svg`）
 
 - viewBox 從 `1200×640` 改成 **`1200×600`（2:1）**，`preserveAspectRatio="xMidYMin meet"`。
-- 字級放大：車道名 24→30、機台名 20→28、編號 16→20、狀態 18→26、閥門標籤 14→20。1280 寬全景時，機台名和狀態字實際約 16–17px。
+- 字級放大：車道名 24→30、機台名 20→28、編號 16→20、狀態 18→26→27（A9，9/24）、閥門標籤 14→20。1280 寬全景時，機台名和狀態字實際約 16–17px。
 - 每台機台多一個隱藏的 `.rc-tag`（`ROOT CAUSE`）；每個閥門多 `.valve-bg`（琥珀 pill）和 `.valve-pulse`（脈動環）；每條車道多一個隱藏的 `#L{n}-badge`（`No root cause found`）。
 - 所有樣式都加了 `#line-layout` 前綴，避免和頁面 CSS 撞名。
 - v1 用到的 ID 全部保留（`L{n}`、`L{n}-status`、`L{n}-M{m}`、`L{n}-M{m}-state`、`.name`、`L{n}-M3-CV{n}`），`app.js` 現有的 `setMachine`、`resetPlant` 不用改。
@@ -392,7 +392,7 @@ C. 找到根因（同一個鏡頭）                          D. 證據不足（
 | 精簡列高 | 60 | 56 | 56 | 56 |
 | 面板捲動 | 證據列在面板內捲動 | 同左 | 同左 | 不在面板內捲動，改整頁捲動 |
 
-**矮螢幕修飾**（`min-width: 1024px` 且 `max-height: 959px`，也就是投影機、非全螢幕瀏覽器）：TopBar 72→56、底列 48→40、主區上下內距 24→16、面板內距 24→16、原始列表格最高 280→200，結論卡改用 compact 版（§3.6）。
+**矮螢幕修飾**（`min-width: 1024px` 且 `max-height: 1199px`，也就是投影機、非全螢幕瀏覽器，以及 1080 高的 F11 全螢幕；A1 9/24 由 959 放寬）：TopBar 72→56、底列 48→40、主區上下內距 24→16、面板內距 24→16、原始列表格最高 280→200，結論卡改用 compact 版（§3.6）。
 
 **全域防溢出規則**（這三條就是 758px bug 的直接修法）：
 - `.main > *`、`.alert > *`、`.panel` 一律 `min-width: 0`。
@@ -550,7 +550,7 @@ DOM 順序改成：
 
 ```
 ┌━━ROOT CAUSE━━━━━━━━━━━━━━━━━━━━━━━━ ▮▮▮ Confidence: High ┐  小標和信心同一行
-│ Cooling valve CV-2 stuck at 20% open                      │  --fs-2xl（L 30px），最多 2 行
+│ Cooling valve CV-2 stuck at 20% open                      │  28px（A1，9/24 定案），最多 2 行
 │ 3 independent signals agree · 1 alternative ruled out     │  16px secondary
 │ Evidence [#2] [#3] [#4]                                   │
 │ Ruled out  Shift handover at 02:30 — no parameter changes │  最多 2 行
@@ -561,7 +561,7 @@ DOM 順序改成：
 
 - 內距 `--space-4`。`Recommended actions` 收成 disclosure 按鈕（`aria-expanded`），展開後清單出現在按鈕列上方，這時 `#result` 自己內部捲動。旁白不念處置步驟，工單上也有，所以預設收起來。
 - Low 信心的 `Low confidence — verify on site before acting.` 提示條照舊放在最上面。
-- 完整版（高度 ≥960）：和 v1 §3.7 一樣，只有兩處調整：小標和信心放同一行；`Create work order` 放在處置清單右下，和清單底部對齊。
+- 完整版（高度 ≥1200；A1 9/24 前是 ≥960）：和 v1 §3.7 一樣，只有兩處調整：小標和信心放同一行；`Create work order` 放在處置清單右下，和清單底部對齊。
 - 灰卡也放在同一個位置，內容照 v1 §3.8，不需要 compact 版（高度大約 320）。
 
 ### 3.7 758px 實測問題對照
@@ -712,8 +712,8 @@ DOM 順序改成：
 
   /* ---- v2 證據小圖 ---- */
   --chart-h: 96px;
-  --chart-mini-w: 120px;
-  --chart-mini-h: 32px;
+  --chart-mini-w: 160px;                        /* XL；A1 9/24 由 120 × 32 放大 */
+  --chart-mini-h: 44px;
   --chart-series: var(--color-info);            /* #5AA9FF 正常段 */
   --chart-series-abnormal: var(--color-warn);   /* #F5A524 越限／偏離之後 */
   --chart-limit: #C4C9D2;                       /* SOP 上下限虛線與標籤 */
@@ -770,8 +770,8 @@ DOM 順序改成：
   .app { height: auto; min-height: 100dvh; grid-template-rows: auto auto 1fr auto; }
   .topbar { flex-wrap: wrap; row-gap: var(--space-2); padding-block: var(--space-2); }
 }
-/* 矮螢幕（投影機、視窗化瀏覽器） */
-@media (min-width: 1024px) and (max-height: 959.98px) {
+/* 矮螢幕（投影機、視窗化瀏覽器、1080 高；A1 9/24 由 959.98 放寬） */
+@media (min-width: 1024px) and (max-height: 1199.98px) {
   :root { --topbar-h: 56px; --bottombar-h: 40px; --main-pad-y: var(--space-4); --panel-pad: var(--space-4); --rows-max-h: 200px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -841,7 +841,7 @@ DOM 順序改成：
 > 規格外的改動：① 修掉 v1 的版面 bug：Gemini 模式下 fixture 黃條隱藏時，`.app` 的 grid 列會整個錯位（面板高度變 0），改成明確指定列；② 圖例移到產線圖上方（照 §3.2 示意）；③ 根因與 Ruled out 沒有做「最多 2 行」截斷，避免把模型文字藏起來，太長時 `#result` 自己捲動；④ 結論出現的那一刻伺服器就停表（`inv.finished`），Recap 的 After 不含收尾時間。
 
 **A. 版面與斷點**
-- [ ] A1　1920×1080（F11）：整頁沒有捲軸；主線結論出現後，結論卡和 5 列精簡證據全部看得到，面板內不需要捲動。 — **Eddie**：未完全達標：headless 量測（無 fixture 黃條）整頁不捲動、結論卡完整，但精簡列只看得到 3／5 列。完整版結論卡實際約 536px（40px 根因在 667px 寬折成 2 行、處置清單 5 行），比 §3.5 估的 420 高。要達標需 Dana 決定：例如 compact 版改成 `max-height: 1199.98px` 以下都用，或接受 3 列
+- [ ] A1　1920×1080（F11）：整頁沒有捲軸；主線結論出現後，結論卡和 5 列精簡證據全部看得到，面板內不需要捲動。 — **Eddie 9/24（第二次會議後）**：照 Dana 定案改了 `app.css` 兩處門檻 959.98→1199.98、compact 根因 28px、XL 小圖 160×44。Edge headless 量（R01 結論後，完整看得到的精簡列）：**1920×1080 5/5**、根因 28px 一行、整頁不捲動、小圖 160×44（fixture 黃條有無都一樣），1600×900 5/5、1280×1024 5/5；**1280×720 只有 2 列（無黃條）／1 列（有 fixture 黃條）、1366×768 2 列**，Dana 的「720 至少 3 列」**沒達到**（改前也是 2／1 列）。原因：720 時證據區只剩 135px，3 列要 190px；1280 寬的根因 28px 仍折 2 行、Ruled out 也折 2 行。實測只調間距最多省約 20px 不夠；把 compact 版的 `Ruled out` 那行在高度 ≤800 時藏起來（第 5 列本身已標 Ruled out）才能到 3 列，且只在無黃條時成立。這是內容取捨，**等 Dana 決定**，我沒改。等主持人截圖驗收。前一版紀錄：未完全達標：headless 量測（無 fixture 黃條）整頁不捲動、結論卡完整，但精簡列只看得到 3／5 列。完整版結論卡實際約 536px（40px 根因在 667px 寬折成 2 行、處置清單 5 行），比 §3.5 估的 420 高。要達標需 Dana 決定：例如 compact 版改成 `max-height: 1199.98px` 以下都用，或接受 3 列
 - [x] A2　1366×768（F11）：整頁沒有捲軸；結論卡（含 `Create work order`）不捲動就完整可見；證據列至少看得到 2 列，其餘在面板內捲動。 — **Eddie**：headless：不捲動、`Create work order` 完整可見、證據列 2 列。待目視
 - [x] A3　1280×720（F11）：同 A2。 — **Eddie**：headless：同 A2（2 列）。為了達標，矮螢幕時面板標題改 20px 讓表頭維持一行、`Evidence`／`Ruled out` 標籤改成同行（§3.6 示意）。待目視
 - [x] A4　1280×720 非全螢幕（可視高度約 600）：整頁沒有捲軸，`Create work order` 不捲動就看得到。 — **Eddie**：headless 1280×600：不捲動、`Create work order` 可見；證據列只剩標題（§3.5 估約 1 列）。矮螢幕時 `#result` 上限改為 `calc(100% - 44px)`，否則 72% 會把按鈕切掉。待目視
@@ -849,7 +849,7 @@ DOM 順序改成：
 - [x] A6　寬度 1600、1599、1280、1279、1024、1023、758、599、360 各截一張圖：沒有任何元素重疊或溢出容器，`Downtime` 數字完整顯示在自己的區域內。 — **Eddie**：headless 抽查 1920／1600／1366／1280／1100／1024／758／390 無橫向溢出；1599、1279、1023、599、360 未截圖。待目視
 - [x] A7　各斷點的 token 值（計時器字級、面板寬、按鈕高、圖高）符合 §3.1 表格。 — **Eddie**：headless 量到：計時器 64／44／40px、按鈕高 64／56、完整圖高 96／72
 - [x] A8　大螢幕文字 ≥16px（原始列表格、全景地圖次要標籤除外）；DevTools 抽查 5 處。 — **Eddie**：待目視
-- [ ] A9　1280 寬全景：機台名稱和 `RUNNING`／`STOPPED` 字實際高度 ≥16px。 — **Eddie**：未達標（估算）：1280 全景縮放約 0.61 倍，機台名 28px≈17px 可以，但 `RUNNING`／`STOPPED` 26px≈15.8px 略低於 16。字級在 Dana 的 SVG 裡，我沒改；建議狀態字 26→27
+- [ ] A9　1280 寬全景：機台名稱和 `RUNNING`／`STOPPED` 字實際高度 ≥16px。 — **Eddie 9/24（第二次會議後）**：兩份 SVG 狀態字 26→27（逐字相同，測試通過）。Edge headless 量：1280 寬無 fixture 黃條（Gemini 模式）縮放 0.608 → **16.4px 達標**；但 1280×720 有 fixture 黃條時產線圖變成高度受限、縮放 0.575 → 15.5px（改前 26px 是 15.0px），1280×800 以上都是 16.4px。主持人若用 fixture 模式在 720 高截圖會量到 15.5px，請以無黃條（或 ≥800 高）為準，或由 Dana 決定。前一版紀錄：未達標（估算）：1280 全景縮放約 0.61 倍，機台名 28px≈17px 可以，但 `RUNNING`／`STOPPED` 26px≈15.8px 略低於 16。字級在 Dana 的 SVG 裡，我沒改；建議狀態字 26→27
 
 **B. 產線圖**
 - [x] B1　app 使用的是 `line-layout-v2.svg`（viewBox `0 0 1200 600`），v1 的 ID 都還能用（現有測試全部通過）。 — **Eddie**：已複製成 `app/static/line-layout.svg`；pytest 全過
@@ -881,7 +881,7 @@ DOM 順序改成：
 - [x] D2　精簡列可以用滑鼠、Enter、Space 展開和收合，`aria-expanded` 會跟著變。 — **Eddie**：原生 `<button>`，Enter／Space 可用，`aria-expanded` 同步。待目視
 - [x] D3　結論出現：結論卡在面板頂端，捲動證據列時結論卡不動；證據列全部收合（原始列展開中的那張除外）。 — **Eddie**：headless 確認
 - [x] D4　點引用 chip `#3`：捲到 #3、展開、閃一次 info 外框。 — **Eddie**：headless 確認
-- [x] D5　高度 ≤959：結論卡是 compact 版，`Recommended actions (3)` 可以展開，`Create work order` 和它在同一行。 — **Eddie**：headless 確認；1280 寬時 `Recommended actions (3)` 按鈕文字會折成 2 行。待目視
+- [x] D5　高度 ≤1199（A1 9/24 前是 ≤959）：結論卡是 compact 版，`Recommended actions (3)` 可以展開，`Create work order` 和它在同一行。 — **Eddie**：headless 確認；1280 寬時 `Recommended actions (3)` 按鈕文字會折成 2 行。待目視
 - [x] D6　灰卡同樣在頂端；`Checked` 清單和下面的證據列一一對應。 — **Eddie**：待目視
 
 **E. Before／After 收尾**

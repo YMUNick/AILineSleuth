@@ -5,8 +5,7 @@ Covers docs/design/ui-v2-spec.md 1.3 / 1.6 (card.chart), 2.3 (where the root cau
 What these tests CANNOT prove: how charts, zoom, pulses and the Recap LOOK and MOVE. That is the browser
 checklist in docs/qa/test-plan.md section 10 (host's Playwright run + manual checks).
 
-Tests marked xfail(strict=True) document open bugs in docs/qa/bugs.md (BUG-009). When fixed they XPASS,
-strict turns that into a failure, and the marker must be removed.
+Section 8 (BUG-009) started as strict xfails; fixed 2026-09-24 and the markers were removed, assertions unchanged.
 """
 from __future__ import annotations
 
@@ -567,7 +566,6 @@ class NullReading:
         return rows
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError, reason="BUG-009: a NULL reading crashes the query instead of being a gap")
 @pytest.mark.parametrize("sid,fn,sensor,minute", [
     ("R01", "get_sensor_window", "mold_temp_c", "02:45"),          # in the window: max() / comparisons
     ("N01", "compare_to_baseline", "coolant_flow_lpm", "02:45"),   # in the window, no deviation found before it
@@ -595,7 +593,6 @@ class BrokenSensorQueries:
         return self.inner.run(sql, params)
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="BUG-009: the failed step stays 'running' (spinner) forever")
 def test_unexpected_query_error_never_leaves_a_step_running(ex):
     mgr = InvestigationManager(get_settings(), BrokenSensorQueries(ex.backend))
     logging.disable(logging.ERROR)

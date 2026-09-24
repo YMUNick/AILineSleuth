@@ -35,6 +35,8 @@ class Settings:
     gemini_location: str
     gemini_temperature: float
     max_agent_turns: int
+    gemini_max_retries: int       # retries of timed-out / 429 / 5xx Gemini calls, per investigation in total
+    gemini_retry_backoff_s: float  # first retry waits this long, then x2 each retry
     step_timeout_s: float
     investigation_timeout_s: float
     fixture_step_delay_s: float
@@ -58,6 +60,8 @@ class Settings:
             gemini_location=_env("GOOGLE_CLOUD_LOCATION", "global"),
             gemini_temperature=float(_env("GEMINI_TEMPERATURE", "0")),
             max_agent_turns=int(_env("MAX_AGENT_TURNS", "10")),
+            gemini_max_retries=int(_env("GEMINI_MAX_RETRIES", "2")),
+            gemini_retry_backoff_s=float(_env("GEMINI_RETRY_BACKOFF_S", "2")),
             step_timeout_s=float(_env("STEP_TIMEOUT_S", "20")),
             investigation_timeout_s=float(_env("INVESTIGATION_TIMEOUT_S", "90")),
             fixture_step_delay_s=float(_env("FIXTURE_STEP_DELAY_S", "1.0")),
@@ -78,6 +82,12 @@ class Settings:
             raise ValueError(f"AGENT_MODE must be one of {AGENT_MODES}")
         if self.query_backend == "bigquery" and not self.gcp_project:
             raise ValueError("QUERY_BACKEND=bigquery requires GOOGLE_CLOUD_PROJECT")
+        if self.max_agent_turns < 1:
+            raise ValueError("MAX_AGENT_TURNS must be >= 1")
+        if not 0 <= self.gemini_max_retries <= 5:  # a cost ceiling, not a knob to turn up under load
+            raise ValueError("GEMINI_MAX_RETRIES must be 0-5")
+        if not 0 <= self.gemini_retry_backoff_s <= 30:
+            raise ValueError("GEMINI_RETRY_BACKOFF_S must be 0-30 seconds")
         if self.trusted_proxy_hops < 0:
             raise ValueError("TRUSTED_PROXY_HOPS must be >= 0")
         if self.presenter_key and len(self.presenter_key) < 16:

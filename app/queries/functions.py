@@ -215,6 +215,12 @@ def _pt(row: dict) -> dict:
     return {"row_id": row["row_id"], "ts": hm(row["ts"]), "value": row["value"]}
 
 
+def _valid(rows: list[dict]) -> list[dict]:
+    """Rows with a reading. A NULL value is a gap (missing minute), never a number (BUG-009): the chart keeps
+    it as [ts, null, row_id] so the line breaks, and max / min / mean / limit checks skip it."""
+    return [r for r in rows if r["value"] is not None]
+
+
 # ---------------------------------------------------------------- chart data (front end only, ui-v2-spec 1.3)
 # Every plotted value is a raw row value with its row_id; labels only repeat numbers already on the card
 # (SOP limit, baseline mean, "since" time) or raw row values. Free text from rows never goes into a label.
@@ -296,15 +302,16 @@ def _get_sensor_window(backend: QueryBackend, scenario_id: str, args: dict) -> Q
     paired = "cv_command_pct" if sensor == "cv_position_pct" else sensor
     rows = backend.run(SQL["sensor_window"], dict(scenario_id=scenario_id, line=line, machine=machine,
                                                   sensor=sensor, paired_sensor=paired, start=start, end=end))
-    main = [r for r in rows if r["sensor"] == sensor]
+    main = [r for r in rows if r["sensor"] == sensor]   # with NULL readings: plotted as gaps
     cmd = [r for r in rows if r["sensor"] != sensor]
+    vals, cmd_vals = _valid(main), _valid(cmd)         # NULL readings skipped for every calculation
     spec = SENSORS[sensor]
     lo, hi, unit, sop = spec["normal_low"], spec["normal_high"], spec["unit"], spec["sop"]
     label = sensor_label(sensor, line)
     expected, cut = _expected_minutes(scenario_id, start, end)
-    missing = max(0, expected - len(main))
+    missing = max(0, expected - len(vals))  # a NULL reading counts as a missing minute
     summary: dict[str, Any] = {"sensor": sensor, "unit": unit, "normal_range": [lo, hi], "sop": sop,
-                               "rows": len(main), "missing_minutes": missing, **_future_note(cut)}
+                               "rows": len(vals), "missing_minutes": missing, **_future_note(cut)}
     check_name = label
     is_valve = sensor == "cv_position_pct"
     chart: dict[str, Any] = dict(
@@ -313,22 +320,22 @@ def _get_sensor_window(backend: QueryBackend, scenario_id: str, args: dict) -> Q
                + ([dict(role="command", points=_points(cmd))] if is_valve and cmd else []),
         limit=None, band=None if is_valve else dict(low=lo, high=hi), marker=None, key_point=None,
         empty_label="No data")
-    if is_valve and cmd:
-        chart["command_label"] = f"Commanded {_fmt(cmd[-1]['value'])}%"  # same value as "commanded 80%"
-    if not main:
+    if is_valve and cmd_vals:
+        chart["command_label"] = f"Commanded {_fmt(cmd_vals[-1]['value'])}%"  # same value as "commanded 80%"
+    if not vals:
         card = dict(title=label, tone="normal", key_value="No data", key_detail="No readings in window",
                     highlight_row_ids=[], check=(check_name, "no data in window"), chart=chart)
         return _result("get_sensor_window", args, rows, summary, card, start, end)
 
-    mx = max(main, key=lambda r: r["value"])
-    mn = min(main, key=lambda r: r["value"])
-    high = next((r for r in main if r["value"] > hi), None)
-    low = next((r for r in main if r["value"] < lo), None)
-    summary.update(min=_pt(mn), max=_pt(mx), first=_pt(main[0]), last=_pt(main[-1]),
+    mx = max(vals, key=lambda r: r["value"])
+    mn = min(vals, key=lambda r: r["value"])
+    high = next((r for r in vals if r["value"] > hi), None)
+    low = next((r for r in vals if r["value"] < lo), None)
+    summary.update(min=_pt(mn), max=_pt(mx), first=_pt(vals[0]), last=_pt(vals[-1]),
                    first_above_limit=_pt(high) if high else None, first_below_limit=_pt(low) if low else None,
-                   series=[[hm(r["ts"]), r["value"]] for r in main])
-    if cmd:
-        summary["command_series"] = [[hm(r["ts"]), r["value"]] for r in cmd]
+                   series=[[hm(r["ts"]), r["value"]] for r in vals])
+    if cmd_vals:
+        summary["command_series"] = [[hm(r["ts"]), r["value"]] for r in cmd_vals]
     gap = f" · {missing} min of data missing" if missing else ""
     limit = None
     if high:
@@ -338,15 +345,15 @@ def _get_sensor_window(backend: QueryBackend, scenario_id: str, args: dict) -> Q
                     highlight_row_ids=[high["row_id"], mx["row_id"]], check=(check_name, "above limit"))
     elif low:
         limit, marker, key = dict(side="low", value=lo, label=f"SOP limit {_fmt(lo)} {unit}"), low, mn
-        if cmd:
-            detail = f"Below normal range since {hm(low['ts'])} · commanded {_fmt(cmd[-1]['value'])}%"
+        if cmd_vals:
+            detail = f"Below normal range since {hm(low['ts'])} · commanded {_fmt(cmd_vals[-1]['value'])}%"
         else:
             detail = f"Below {sop} limit of {_fmt(lo)} {unit} since {hm(low['ts'])}"
         card = dict(tone="warn", key_value=f"{_fmt(mn['value'])} {unit}".replace(" %", "%"),
                     key_detail=detail + gap, highlight_row_ids=[low["row_id"], mn["row_id"]]
-                    + ([cmd[-1]["row_id"]] if cmd else []), check=(check_name, "below limit"))
+                    + ([cmd_vals[-1]["row_id"]] if cmd_vals else []), check=(check_name, "below limit"))
     else:
-        last = main[-1]
+        last = vals[-1]
         marker, key = None, last
         card = dict(tone="normal", key_value=f"{_fmt(last['value'])} {unit}".replace(" %", "%"),
                     key_detail=f"Within {sop} range{gap}", highlight_row_ids=[last["row_id"]],
@@ -367,16 +374,17 @@ def _compare_to_baseline(backend: QueryBackend, scenario_id: str, args: dict) ->
     spec = SENSORS[sensor]
     unit = spec["unit"]
     label = sensor_label(sensor, line)
-    base = [r for r in rows if r["period"] == "baseline"]
-    win = [r for r in rows if r["period"] == "window"]
+    base = _valid([r for r in rows if r["period"] == "baseline"])  # NULL readings never enter the mean
+    win_all = [r for r in rows if r["period"] == "window"]          # with NULL readings: plotted as gaps
+    win = _valid(win_all)
     expected, cut = _expected_minutes(scenario_id, start, end)
-    missing = max(0, expected - len(win))
+    missing = max(0, expected - len(win))  # a NULL reading counts as a missing minute
     summary: dict[str, Any] = {"sensor": sensor, "unit": unit,
                                "baseline_window": f"{b_start:%H:%M}-{b_end:%H:%M}", "baseline_rows": len(base),
                                "window_rows": len(win), "missing_minutes": missing, **_future_note(cut)}
     title = f"{label} vs. baseline"
     chart: dict[str, Any] = dict(kind="series_baseline", unit=unit, **_series_x(scenario_id, start, end),
-                                 series=[dict(role="actual", points=_points(win))],  # window only, not the baseline
+                                 series=[dict(role="actual", points=_points(win_all))],  # window only, not the baseline
                                  band=None, baseline=None, marker=None, key_point=None, empty_label="No data")
     if not base or not win:
         card = dict(title=title, tone="normal", key_value="No data",

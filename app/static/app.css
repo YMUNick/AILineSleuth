@@ -38,8 +38,8 @@
 
   /* ---- v2 evidence charts ---- */
   --chart-h: 96px;
-  --chart-mini-w: 120px;
-  --chart-mini-h: 32px;
+  --chart-mini-w: 160px;   /* XL (>=1600) only; L and below override (A1, Dana 9/24: 120x32 -> 160x44) */
+  --chart-mini-h: 44px;
   --chart-series: var(--color-info);
   --chart-series-abnormal: var(--color-warn);
   --chart-limit: #C4C9D2;
@@ -91,7 +91,7 @@
 @media (max-width: 1023.98px) {   /* S: <1024, one column, the whole page scrolls */
   :root { --cols: minmax(0, 1fr); }
 }
-@media (min-width: 1024px) and (max-height: 959.98px) {   /* short screens: projectors, windowed browsers */
+@media (min-width: 1024px) and (max-height: 1199.98px) {   /* short screens (A1: up to 1080 high): projectors, windowed browsers */
   :root { --topbar-h: 56px; --bottombar-h: 40px; --main-pad-y: var(--space-4); --panel-pad: var(--space-4); --rows-max-h: 200px; }
 }
 @media (max-width: 599px) { :root { --fs-sm: 14px; --fs-md: 16px; --fs-lg: 18px; --fs-xl: 22px; --fs-2xl: 26px; } }
@@ -396,12 +396,12 @@ button:focus-visible, select:focus-visible, a:focus-visible { outline: none; box
   .recap { padding: var(--space-6); }
   .recap-row { grid-template-columns: minmax(0, 1fr); }
 }
-@media (min-width: 1024px) and (max-height: 959.98px) {   /* short screens: compact conclusion (ui-v2-spec 3.6) */
+@media (min-width: 1024px) and (max-height: 1199.98px) {   /* short screens: compact conclusion (ui-v2-spec 3.6, A1) */
   #result { max-height: calc(100% - 44px); }   /* Create work order must stay visible; the list keeps its heading */
   .panel-head h2 { font-size: var(--fs-lg); }  /* keeps title, chip and Elapsed on one line at 1280 (spec 3.5 budget) */
   .panel-body { gap: var(--space-2); }
   .conclusion { padding: var(--space-4); }
-  .conclusion .root-cause { margin: var(--space-1) 0 var(--space-2); }
+  .conclusion .root-cause { font-size: 28px; margin: var(--space-1) 0 var(--space-2); }  /* A1: one line at 1080 */
   .conc-line { display: flex; align-items: baseline; gap: var(--space-3); margin-top: var(--space-2); }
   .conc-line > .subhead { margin-top: 0; flex: none; }
   .grey { padding: var(--space-4); }

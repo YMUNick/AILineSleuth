@@ -38,7 +38,7 @@
     #line-layout .machine .led { fill: var(--machine-normal, #3DD68C); }
     #line-layout .machine .name { fill: var(--color-text-primary, #E8EAED); font: 600 28px Inter, system-ui, sans-serif; }
     #line-layout .machine .mid { fill: var(--color-text-secondary, #A3AAB8); font: 500 20px Inter, system-ui, sans-serif; }
-    #line-layout .machine .state { fill: var(--machine-normal, #3DD68C); font: 700 26px Inter, system-ui, sans-serif; letter-spacing: 0.04em; }
+    #line-layout .machine .state { fill: var(--machine-normal, #3DD68C); font: 700 27px Inter, system-ui, sans-serif; letter-spacing: 0.04em; }
 
     #line-layout .machine.is-warn .body { stroke: var(--machine-warn, #F5A524); stroke-width: 3; }
     #line-layout .machine.is-warn .led, #line-layout .machine.is-warn .state { fill: var(--machine-warn, #F5A524); }

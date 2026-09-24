@@ -86,6 +86,8 @@ Quinn 的 `docs/qa/test-plan.md` 可以直接引用這張表；要改題目改 `
 - 每次呼叫寫一行 JSON log（函式、參數、筆數、耗時、是否 cached），Cloud Run 會自動進 Cloud Logging（F3 驗收）。
 - **證據小圖資料 `card.chart`（UI v2，`docs/design/ui-v2-spec.md` §1.3）**：和 card 同時、決定性地產生，只給前端畫圖，**不送進 Gemini**，逾時退回快取時跟 card 一起被快取。圖上每個點是 `[HH:MM, 原始值, row_id]`，不平滑、不補值；`limit` 取 catalog 的 SOP 上下限、`baseline` 取基準平均、`marker`／`key_point` 都指回原始列（`tests/test_queries.py` 驗證）。x 軸終點截在情境 now（和 BUG-002 一致）。交班紀錄的事件標籤是固定模板（`Handover 02:30`），**絕不放 message 原文**（R07 有 injection 字串）。
 - 逾時（預設 20 秒）時，如果同一組參數有上次成功的結果就退回並標 `Cached`；沒有就顯示 `Failed`。目前快取在記憶體，重啟會清空。
+- **感測值是 NULL（BUG-009）**：當成缺值。圖上保留 `[HH:MM, null, row_id]`（前端斷線）；最大／最小／平均／越限／偏離的計算都跳過它；缺值分鐘數把它算進去。整段都是 NULL 就和沒資料一樣顯示 `No data`。
+- **後端丟出非預期錯誤（BUG-009，例如 BigQuery 503、權限、配額）**：只有那一步變 `error`（`Query failed`、`chart: null`），給模型的是一句固定短句，例外細節只寫進 log（`"event": "query_error"`）；調查繼續，由模型用其他證據收尾。調查因任何原因結束時，還停在 `running` 的步驟一律改成 `error`，畫面不會留下轉圈的 `Querying…`。
 
 ## 6. Agent 與結論規則
 
@@ -94,6 +96,16 @@ Quinn 的 `docs/qa/test-plan.md` 可以直接引用這張表；要改題目改 `
 - 注意：Google 對 Gemini 3 建議 temperature 用預設 1.0，設 0 可能出現重複迴圈或品質下降。會議定案是 0，所以預設 0；回歸集若出現卡迴圈，再拿 `GEMINI_TEMPERATURE` 做對照實驗。
 - 結論規則（`app/agent/conclusion.py`）：引用有效證據卡 < 2 張 → 一律改灰卡；被引用的卡**全部是正常**（沒有任何異常訊號）→ 也改灰卡（BUG-001）；模型輸出型別不對（例如字串代替陣列）當成缺欄位（BUG-006）；信心標籤由伺服器算（**暫定**：引用卡中有異常訊號 ≥3 張 High、2 張 Medium、其餘 Low，等 PRD Q4 定案再改）。
 - Prompt injection：日誌文字在 system prompt 明講是不可信資料；R07 內含攻擊字串，回歸集會驗證。
+- **強制交卷**：查詢滿 8 次，或已到最後一輪（`MAX_AGENT_TURNS`），該輪只允許 `submit_conclusion`。
+- **Gemini 逾時／429 重試上限**（9/24 會議，Quinn）：單次呼叫超過 `STEP_TIMEOUT_S`、回 429 或 5xx（500/502/503/504）、連線錯誤，才重試；400、403 等不重試、直接 failed。重試次數是**整個調查合計** `GEMINI_MAX_RETRIES`（預設 2，允許 0–5），等待 `GEMINI_RETRY_BACKOFF_S` × 2^n（預設 2 秒、4 秒），而且不會超過 `INVESTIGATION_TIMEOUT_S`、按 Reset 立即停。用完就讓調查 failed（`AgentUnavailable: Gemini rate limited (429) on turn 3; gave up after 2 retries …`），**不會無限重試**。所以一次調查最多呼叫 Gemini `MAX_AGENT_TURNS + GEMINI_MAX_RETRIES` 次（預設 12）。SDK 自己的重試關掉（`HttpRetryOptions(attempts=1)`），HTTP 請求在 `STEP_TIMEOUT_S + 5` 秒放棄，卡住的呼叫不會一直佔著執行緒。每次重試寫一行 `"event": "gemini_retry"`。
+- 只有查詢步驟有快取退路；Gemini 那一輪逾時沒有退路，重試用完就 failed（ENH-003，不重播舊調查）。
+
+### 6.1 Token 紀錄（ENH-002）
+
+- 每輪 Gemini 回應寫一行 `"event": "gemini_turn"`，`usage` 內含 `input_tokens`（prompt，含 `cached_tokens`）、`output_tokens`、`thinking_tokens`、`cached_tokens`、`total_tokens`，取自 `usage_metadata`；API 沒回的欄位記 0（例如沒有 thinking），整個 `usage_metadata` 沒回則該輪記在 `turns_without_usage`，不猜數字。
+- 同時累計到調查結果 `usage`（`GET /api/investigations/{id}` 可看），調查結束時寫一行 `"event": "usage"`（含 `turns`、`retries`、各 token 合計、`status`）。
+- **OFFLINE FIXTURE 沒有呼叫 Gemini**：`usage.applicable=false`，所有數字是 `null`（不適用），不是 0。
+- 算成本（Felix）：`input_tokens × 輸入單價 ＋ (output_tokens ＋ thinking_tokens) × 輸出單價`；thinking 按輸出計費。量測用 `python -m scripts.run_regression --only R01 N01 --repeat 10 --json usage.json`，每題會印出每次調查的中位數。
 
 ## 7. OFFLINE FIXTURE 模式（`AGENT_MODE=offline_fixture`）
 

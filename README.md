@@ -17,16 +17,17 @@
 
 | Area / 領域 | Documents / 文件 | English | 繁體中文 | Doc language / 文件語言 |
 |---|---|---|---|---|
-| Product / 產品 | [docs/prd.md](docs/prd.md) | Product requirements: positioning, MVP flow, features F1–F8, out-of-scope list, demo script | 產品需求 PRD：定位、MVP 流程、功能 F1–F8、不做清單、Demo 劇本 | 中文 |
-| Roadmap | [docs/roadmap.md](docs/roadmap.md) | Milestones 9/24–10/18, stop-loss points, owner's to-dos | 9/24–10/18 里程碑、停損點、老闆必做事項 | 中文 |
+| Product / 產品 | [docs/prd.md](docs/prd.md) | Product requirements: positioning, MVP flow, features F1–F10 (incl. UI v2: evidence charts, root-cause highlight, responsive layout, Before/After recap), motion rules, out-of-scope list, demo script | 產品需求 PRD：定位、MVP 流程、功能 F1–F10（含 UI v2：證據小圖、根因高亮、響應式版面、前後對比）、動態規則、不做清單、Demo 劇本 | 中文 |
+| Roadmap | [docs/roadmap.md](docs/roadmap.md) | Milestones 9/24–10/18, this week's priorities (owner's dates, GCP day-one path, real-Gemini pass criteria, freeze list, Cloud Run min-instances policy), stop-loss points, owner's to-dos | 9/24–10/18 里程碑、本週重點（老闆日期清單、GCP 開通當天路徑、真 Gemini 通過標準、凍結清單、Cloud Run 常駐政策）、停損點、老闆必做事項 | 中文 |
 | Manual / 使用手冊 | [docs/manual/user-manual.md](docs/manual/user-manual.md) | User manual: setup, 90-second walkthrough, presenter mode, troubleshooting, known issues | 使用手冊：安裝、90 秒操作流程、簡報者模式、疑難排解、已知問題（第 12 節為繁中重點） | English（§12 中文） |
-| Pitch / 簡報 | [Pitch script](docs/pitch/pitch-script.md), [Pitch deck outline](docs/pitch/pitch-deck.md), [Judge Q&A](docs/pitch/judge-qa.md), [Submission summary](docs/pitch/submission-summary.md) | 3-minute pitch script, slide outline, judge questions and answers, text for the submission form | 3 分鐘講稿、簡報大綱、評審問答、繳交表單文字 | English |
+| Pitch / 簡報 | [Pitch script](docs/pitch/pitch-script.md), [Pitch deck outline](docs/pitch/pitch-deck.md), [Judge Q&A](docs/pitch/judge-qa.md), [Submission summary](docs/pitch/submission-summary.md), [One-pager (PDF)](docs/pitch/one-pager.pdf), [Demo deck (PPTX)](docs/pitch/LineSleuth-demo.pptx) | 3-minute pitch script, slide outline, judge questions and answers, text for the submission form, one-page summary, demo slide deck (frozen until after 10/10) | 3 分鐘講稿、簡報大綱、評審問答、繳交表單文字、一頁式簡介、demo 簡報檔（10/10 前凍結） | English |
+| Demo video / 影片 | [Demo video storyboard](docs/pitch/demo-video-storyboard.md) | Shot-by-shot storyboard and narration for the demo video (frozen until after 10/10) | Demo 影片分鏡與旁白（10/10 前凍結） | 中文（旁白 English） |
 | Design / 設計 | [Storyboard](docs/design/storyboard.md), [UI spec](docs/design/ui-spec.md), [UI v2 spec](docs/design/ui-v2-spec.md), [Line layout v2](docs/design/line-layout-v2.svg) | Demo storyboard with the final English UI copy, UI specification (v1, and v2: evidence charts, root cause on the map, breakpoints, Before/After), plant layout graphic | 分鏡稿（含最終英文 UI 文案）、UI 規格（v1，以及 v2：證據小圖、產線圖根因亮燈、斷點、前後對比）、產線配置圖 | 中文 |
 | Engineering / 工程 | [Architecture](docs/engineering/architecture.md), [Deploy](docs/engineering/deploy.md), [Bug-fix changes](docs/engineering/changes-bugfix.md) | System architecture, Cloud Run deployment steps, change notes for BUG-001 to BUG-008 | 架構、Cloud Run 部署步驟、BUG-001～008 變更說明 | 中文 |
 | QA / 測試 | [Test plan](docs/qa/test-plan.md), [Bug list](docs/qa/bugs.md), [Organizer inquiry draft](docs/qa/organizer-inquiry-draft.md) | Test plan, bug list with fix status, draft questions to the organizers | 測試計畫、bug 清單（含修正狀態）、寄給主辦的詢問信草稿 | 中文 |
 | Finance / 財務 | [ROI model notes](docs/finance/roi-model.md), [ROI model (CSV)](docs/finance/roi-model.csv) | How the ROI model works, and the spreadsheet itself | ROI 試算說明、ROI 試算表 | 中文 |
 | Sales / 業務 | [Interview guide](docs/sales/interview-guide.md), [Outreach message](docs/sales/outreach-message.md) | Plant-manager interview guide, outreach message templates | 廠長訪談題綱、邀約訊息範本 | 中文 |
-| Meetings / 會議 | [2026-09-24 theme direction](docs/meetings/2026-09-24-駭客松主題方向.md) | Meeting notes: competition theme direction | 會議紀錄 2026-09-24：駭客松主題方向 | 中文 |
+| Meetings / 會議 | [2026-09-24 theme direction](docs/meetings/2026-09-24-駭客松主題方向.md), [2026-09-24 next steps after UI v2](docs/meetings/2026-09-24-下一步與優化.md) | Meeting notes: competition theme direction; next steps and priorities after UI v2 | 會議紀錄 2026-09-24：駭客松主題方向；UI v2 之後的下一步與優化 | 中文 |
 
 ## Run locally / 本機啟動（Eddie）
 

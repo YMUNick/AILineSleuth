@@ -72,7 +72,7 @@ gcloud run deploy $SERVICE --source . --region $REGION \
   --cpu 1 --memory 1Gi --timeout 120 --concurrency 40 \
   --allow-unauthenticated \
   --set-secrets PRESENTER_KEY=PRESENTER_KEY:latest \
-  --set-env-vars AGENT_MODE=gemini,QUERY_BACKEND=bigquery,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=global,GEMINI_MODEL=gemini-3-flash-preview,GEMINI_TEMPERATURE=0,BQ_DATASET=linesleuth_demo,RATE_LIMIT_PER_HOUR=20,GLOBAL_RATE_LIMIT_PER_HOUR=60,TRUSTED_PROXY_HOPS=1,MAX_CONCURRENT_INVESTIGATIONS=3
+  --set-env-vars AGENT_MODE=gemini,QUERY_BACKEND=bigquery,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=global,GEMINI_MODEL=gemini-3-flash-preview,GEMINI_TEMPERATURE=0,BQ_DATASET=linesleuth_demo,RATE_LIMIT_PER_HOUR=20,GLOBAL_RATE_LIMIT_PER_HOUR=60,TRUSTED_PROXY_HOPS=1,MAX_CONCURRENT_INVESTIGATIONS=3,GEMINI_MAX_RETRIES=2,GEMINI_RETRY_BACKOFF_S=2
 ```
 
 參數理由：
@@ -86,6 +86,7 @@ gcloud run deploy $SERVICE --source . --region $REGION \
 | `--set-secrets PRESENTER_KEY=...` | 簡報者金鑰（5.2）。第 4 步沒建 secret 的話部署會失敗；暫時不用就拿掉這行。 |
 | `GLOBAL_RATE_LIMIT_PER_HOUR=60` | 全服務每小時上限（5.1），真正的費用天花板。60 是暫定值，Felix 拿到每次調查成本後重算。 |
 | `TRUSTED_PROXY_HOPS=1` | 直接用 `*.run.app` 網址時是 1（5.1）。 |
+| `GEMINI_MAX_RETRIES=2`、`GEMINI_RETRY_BACKOFF_S=2` | Gemini 逾時／429／5xx 的重試上限，**整個調查合計** 2 次（等 2 秒、4 秒），用完調查就 failed，不會無限重試。一次調查最多呼叫 Gemini `MAX_AGENT_TURNS`＋2 次。細節見 `architecture.md` §6。 |
 
 部署完拿到網址後，把 QR 用的網址補上（決賽可改成短網址）：
 
@@ -142,7 +143,7 @@ gcloud run services update $SERVICE --region $REGION --update-env-vars PUBLIC_BA
 
 1. 開 `$URL`，確認**沒有** OFFLINE FIXTURE 黃條，底列顯示 `Agent: <模型名>`。
 2. 按 Investigate 跑主線與正常情境各一次。
-3. Cloud Logging 查 `jsonPayload` 或文字 `"event": "query"`，確認每次函式呼叫都有記錄。
+3. Cloud Logging 查 `jsonPayload` 或文字 `"event": "query"`，確認每次函式呼叫都有記錄；查 `"event": "usage"`，確認每次調查都有 `turns` 和 input／output／thinking token（ENH-002，`architecture.md` §6.1）。出現 `"event": "gemini_retry"` 表示碰到逾時或 429，次數有上限（`GEMINI_MAX_RETRIES`）。
 4. 本機對雲端資料跑回歸集：`AGENT_MODE=gemini QUERY_BACKEND=bigquery python -m scripts.run_regression --repeat 3`，≥ 9/10 且灰卡案例全過才算上線（PRD 第 9 節）。
 5. 照 5.1 用偽造 `X-Forwarded-For` 打一次，確認 log 裡的 `client` 是真 IP。
 6. 照 5.2 在簡報用瀏覽器開 `/?key=...`，`/api/config` 顯示 `"presenter": true`；再用手機（不同瀏覽器）按 Reset，確認大螢幕上的調查沒被取消。

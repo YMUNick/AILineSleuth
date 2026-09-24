@@ -7,11 +7,14 @@
 Requires AGENT_MODE=gemini and Vertex AI credentials. Refuses to run in OFFLINE FIXTURE mode,
 because a scripted agent would produce a meaningless score.
 Gate (PRD section 9): >= 9/10 root causes correct AND every insufficient-evidence case correct.
+Token cost (ENH-002): every result in --json carries `usage` (turns, retries, input / output / thinking tokens);
+each scenario also prints the median per investigation, e.g. --only R01 N01 --repeat 10 for roi-model.csv.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import sys
 from collections import Counter
 
@@ -19,6 +22,9 @@ from app.config import get_settings
 from app.data.scenarios import SCENARIOS
 from app.investigations import InvestigationManager
 from app.queries.backends import make_backend
+
+
+USAGE_MEDIANS = ("turns", "retries", "input_tokens", "output_tokens", "thinking_tokens")
 
 
 def main() -> int:
@@ -47,7 +53,7 @@ def main() -> int:
             answers.append(answer)
             results.append(dict(scenario=sid, run=i + 1, status=inv.status, answer=answer, error=inv.error,
                                 calls=[(s["function"], s["args"]) for s in inv.steps],
-                                elapsed_s=inv.public()["elapsed_s"], conclusion=got))
+                                elapsed_s=inv.public()["elapsed_s"], conclusion=got, usage=inv.public()["usage"]))
         want = exp.get("root_cause_key", exp["status"])
         correct = all(x == want for x in answers)
         if len(set(answers)) > 1:
@@ -63,6 +69,8 @@ def main() -> int:
         for r in results[-a.repeat:]:
             if r["error"]:
                 print(f"     error: {r['error'][:200]}")
+        med = {k: statistics.median(r["usage"][k] for r in results[-a.repeat:]) for k in USAGE_MEDIANS}
+        print(f"     median per investigation ({a.repeat} runs): " + " ".join(f"{k}={v:g}" for k, v in med.items()))
     print(f"\nRoot causes: {rc_ok}/{rc_total}   Insufficient-evidence cases: {ie_ok}/{ie_total}   "
           f"Inconsistent across repeats: {inconsistent or 'none'}")
     if a.json:

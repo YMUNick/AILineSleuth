@@ -241,8 +241,9 @@ async function pollOnce() {
 function render(inv) {
   state.inv = inv;
   $("elapsed").textContent = `Elapsed ${mmss(elapsedSec(inv))}`;
-  for (const step of inv.steps) renderStep(inv, step);
-  if (inv.status === "running") return;
+  const over = inv.status !== "running";  // BUG-009: a finished investigation never leaves a spinning "Querying…" card
+  for (const step of inv.steps) renderStep(inv, over && step.status === "running" ? { ...step, status: "error" } : step);
+  if (!over) return;
   stopPolling();
   setButton("done");
   if (state.conclusionShown) return;

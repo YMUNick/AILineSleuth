@@ -5,6 +5,7 @@
 - 我沒有改任何 `app/` 程式。標 `xfail` 的測試在 `tests/test_qa_adversarial.py`，用 `strict=True`：修好後測試會變成 XPASS→失敗，請順手拿掉該測試的 `@pytest.mark.xfail`。
 - **2026-09-24 Eddie 修正結果**：BUG-001～008 全部 Fixed，strict xfail 已全部拿掉；`pytest` 87 passed、1 skipped（真 Gemini）、0 xfailed。變更說明給 PM：`docs/engineering/changes-bugfix.md`。BUG-003、004 的雲端行為要照 `docs/engineering/deploy.md` 5.1、5.2 上線後實測。
 - **2026-09-24 UI v2 驗收（Quinn）**：新增 `tests/test_ui_v2_contract.py`（89 條）。新開 BUG-009，strict xfail ×4（這次照 BUG-006 的建議都加了 `raises=`，測試自己壞掉不會被吞掉）。整體 `pytest` 196 passed、1 skipped、4 xfailed。
+- **2026-09-24 第二次會議後 Eddie**：BUG-009 Fixed（4 條 strict xfail 拿掉，斷言沒改，轉為 passed）；ENH-002 Fixed；另加 Gemini 逾時／429 重試上限（Quinn 補的風險）與假 client 測試 `tests/test_fake_clients.py`（27 條，Gemini／BigQuery 都不連網）；`tests/conftest.py` 加了斷網防護（非 loopback 的連線與 DNS 一律丟錯），整套在斷網狀態下跑。`pytest` 227 passed、1 skipped（真 Gemini）、0 xfailed。
 - 嚴重度：**High**＝會讓 demo 翻車、違反 PRD 驗收或費用失控；**Medium**＝demo 上看得到、傷信任；**Low**＝機率低或只影響回歸集。
 
 | ID | 嚴重度 | 標題 | 自動化測試 | 建議期限 | 狀態（9/24 Eddie） |
@@ -17,8 +18,9 @@
 | BUG-006 | Low | 模型輸出型別不對時沒擋（字串被拆成字元、list 造成當機） | xfail | 10/10 | Fixed |
 | BUG-007 | Low | 模擬資料的百分比感測器超過 100% | xfail | 10/8 | Fixed |
 | BUG-008 | Low | `line` 參數接受 `True`、`2.7`、`"2"` | 無 | 有空再做 | Fixed |
-| BUG-009 | Low | 感測值是 NULL 或後端丟出非預期錯誤時，查詢當掉、那一步永遠停在 running | xfail ×4 | 10/13（接 BigQuery 前） | Open |
-| ENH-001～005 | — | 回歸執行器門檻、token 記錄、Gemini 逾時、執行緒池、補情境 | — | 見下 | 未處理（不在本次範圍） |
+| BUG-009 | Low | 感測值是 NULL 或後端丟出非預期錯誤時，查詢當掉、那一步永遠停在 running | xfail ×4 | 10/13（接 BigQuery 前） | Fixed（9/24 第二次會議後） |
+| ENH-002 | — | token 記錄 | 有（假 client） | 9/26 | Fixed（9/24 第二次會議後） |
+| ENH-001、003～005 | — | 回歸執行器門檻、Gemini 逾時退路、執行緒池、補情境 | — | 見下 | 未處理（ENH-003 的架構文件已補，見下） |
 
 ---
 
@@ -130,6 +132,11 @@
   1. 查詢函式把 NULL 當缺值：圖上保留 `[時間, null, row_id]`；算 max／min／平均／越限／偏離時跳過 NULL；缺幾分鐘的計算把 NULL 算進去。
   2. `call_tool` 接住其他例外：該步改成 `error`（`Query failed`、`chart: null`，和逾時又沒有快取時一樣），錯誤回給模型；調查要 failed 的話，也要先把 running 的步驟改掉。畫面上的失敗訊息用短句，詳細的例外寫進 log。
 - **測試**：`tests/test_ui_v2_contract.py` 的 `test_null_reading_is_a_gap_not_a_crash`（3 組，`raises=TypeError`）、`test_unexpected_query_error_never_leaves_a_step_running`（`raises=AssertionError`）。修好後會 XPASS，請拿掉 xfail。
+- **狀態：Fixed**（Eddie 9/24，第二次會議後）。兩個建議都照做：
+  1. NULL 當缺值：`app/queries/functions.py` 新增 `_valid()`。`get_sensor_window`、`compare_to_baseline` 的最大／最小／基準平均／越限／偏離／命令值都只用有值的列；圖上保留 `[HH:MM, null, row_id]`；缺值分鐘數把 NULL 算進去；整段都是 NULL 就是 `No data`。給模型的 series 只放有值的點，缺幾分鐘看 `missing_minutes`。
+  2. 非預期錯誤：`app/investigations.py` `call_tool` 接住其他例外，那一步改 `error`（`Query failed`、`chart: null`），給模型的是一句固定短句，例外細節只寫進 log（`"event": "query_error"`），調查繼續由模型用其他證據收尾。調查因任何原因結束時，還停在 `running` 的步驟一律改成 `error`；前端 `render()` 也加了一道：調查結束後不會再畫轉圈的 `Querying…`。
+  - 測試：4 條 strict xfail 拿掉（斷言沒動），通過。
+  - 沒改：調查層級的失敗訊息格式（`TimeoutError: …`）照舊，因為 `test_investigation_over_budget_fails_honestly` 用它判斷。
 
 ---
 
@@ -142,3 +149,10 @@
 | ENH-003 | Gemini 單輪逾時（20 秒）目前沒有快取退路，整個調查直接 failed。請在 `docs/engineering/architecture.md` 寫明「只有查詢步驟有快取退路」，PRD 的「每步都能退回快取」需要 Paula 同步改字。**不要**用「重播上一次成功的調查」當退路，除非畫面明確標示是重播，否則等於寫死。 | 會議底線：查詢與 Gemini 必須即時跑。 |
 | ENH-004 | BigQuery 查詢加客戶端逾時（`result(timeout=...)` 或 job timeout）。 | `future.result(timeout)` 不會真的停掉執行緒；查詢池只有 4 條，BigQuery 卡住 4 次後後面全部排隊逾時。 |
 | ENH-005 | 在 `app/data/scenarios.py` 補三個「對抗集」情境（不計入 10 題門檻，單獨報告）：**R11 雙異常**（可直接抄 `tests/test_qa_adversarial.py` 的 `QA_DBL`）、**N03 正常資料＋要求捏造根因的 injection**、**N04 正常資料＋越南文交班備註**。 | 會議要求測「雙異常、injection、越南文」，但現有 12 情境只有 R07 一題 injection，而且是在「本來就有真因」的資料上，最危險的「正常資料被 injection 騙出根因」沒有覆蓋。 |
+
+### ENH 狀態（9/24 第二次會議後，Eddie）
+
+- **ENH-002 Fixed**：每輪 Gemini 回應寫一行 `"event": "gemini_turn"`，`usage` 內有 input／output／thinking／cached／total token（取自 `usage_metadata`，API 沒回的欄位記 0；整個沒回記在 `turns_without_usage`，不猜）。同時累計到調查結果 `usage`（`turns`、`retries`、各 token 合計，`GET /api/investigations/{id}` 看得到），結束時寫一行 `"event": "usage"`。OFFLINE FIXTURE 的 `usage.applicable=false`、數字全是 `null`（不適用），不是 0。`scripts/run_regression.py` 的 `--json` 每筆帶 `usage`，每題印出每次調查的中位數，給 Felix 回填 `roi-model.csv` 第 15 列：`--only R01 N01 --repeat 10`。
+- **Gemini 逾時／429 重試上限（Quinn 9/24 補的風險，原本沒有 ID）**：只重試逾時、429、5xx、連線錯誤；次數是整個調查合計 `GEMINI_MAX_RETRIES`（預設 2，允許 0–5），等待 `GEMINI_RETRY_BACKOFF_S`×2^n（預設 2、4 秒），不超過調查時限、Reset 立即停，用完就 failed。SDK 自己的重試關掉。一次調查最多呼叫 Gemini `MAX_AGENT_TURNS + GEMINI_MAX_RETRIES` 次（預設 12）。另外：最後一輪也強制只能 `submit_conclusion`。文件：`.env.example`、`docs/engineering/architecture.md` §6、§6.1、`deploy.md` §5、§6。
+- **ENH-003**：架構文件已補「只有查詢步驟有快取退路；Gemini 那一輪逾時沒有退路，重試用完就 failed，不重播舊調查」（`architecture.md` §6）。PRD 的字面要 Paula 同步，我沒動 `docs/prd.md`。
+- 假 client 測試（`tests/test_fake_clients.py`）：Gemini 多輪／平行呼叫、強制交卷（查詢滿 8 次、最後一輪）、沒交卷、逾時重試成功／用完、429 上限與退避、上限是整個調查合計、400／403 不重試、Reset 立即停止退避、token 累計與 log、fixture 不適用；BigQuery 各函式參數型別（`line` 從 2.0 轉 INT64、時間 DATETIME）、表名、和本機 DuckDB 結果逐欄相同、工單 INSERT 型別。還沒驗證的：真 Vertex AI 回的 `usage_metadata` 欄位與 429 格式、真 BigQuery 的 dry run（開通當天）。
