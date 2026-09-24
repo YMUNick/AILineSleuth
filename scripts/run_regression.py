@@ -3,6 +3,7 @@
     python -m scripts.run_regression               # every scenario once
     python -m scripts.run_regression --repeat 3    # consistency check (PRD: same answer 3 times)
     python -m scripts.run_regression --only R01 N01
+    python -m scripts.run_regression --only R01 N01 --repeat 10 --pause 20   # one at a time, like demo day
 
 Requires AGENT_MODE=gemini and Vertex AI credentials. Refuses to run in OFFLINE FIXTURE mode,
 because a scripted agent would produce a meaningless score.
@@ -16,6 +17,7 @@ import argparse
 import json
 import statistics
 import sys
+import time
 from collections import Counter
 
 from app.config import get_settings
@@ -32,6 +34,7 @@ def main() -> int:
     p.add_argument("--repeat", type=int, default=1)
     p.add_argument("--only", nargs="*")
     p.add_argument("--json", help="write detailed results to this file")
+    p.add_argument("--pause", type=float, default=0, help="seconds to wait between investigations (eases 429s)")
     a = p.parse_args()
 
     settings = get_settings()
@@ -46,6 +49,8 @@ def main() -> int:
         exp = SCENARIOS[sid]["expected"]
         answers = []
         for i in range(a.repeat):
+            if a.pause and results:
+                time.sleep(a.pause)
             mgr.reset()
             inv = mgr.start(sid, background=False)
             got = inv.conclusion or {}
