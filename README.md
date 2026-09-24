@@ -38,7 +38,7 @@
 | Product / 產品 | [docs/prd.md](docs/prd.md) | Product requirements: positioning, MVP flow, features F1–F10 (incl. UI v2: evidence charts, root-cause highlight, responsive layout, Before/After recap), motion rules, out-of-scope list, demo script | 產品需求 PRD：定位、MVP 流程、功能 F1–F10（含 UI v2：證據小圖、根因高亮、響應式版面、前後對比）、動態規則、不做清單、Demo 劇本 | 中文 |
 | Roadmap | [docs/roadmap.md](docs/roadmap.md) | Milestones 9/24–10/18, this week's priorities (owner's dates, GCP day-one path, real-Gemini pass criteria, freeze list, Cloud Run min-instances policy), stop-loss points, owner's to-dos | 9/24–10/18 里程碑、本週重點（老闆日期清單、GCP 開通當天路徑、真 Gemini 通過標準、凍結清單、Cloud Run 常駐政策）、停損點、老闆必做事項 | 中文 |
 | Manual / 使用手冊 | [docs/manual/user-manual.md](docs/manual/user-manual.md) | User manual: setup, 90-second walkthrough, presenter mode, troubleshooting, known issues | 使用手冊：安裝、90 秒操作流程、簡報者模式、疑難排解、已知問題（第 12 節為繁中重點） | English（§12 中文） |
-| Pitch / 簡報 | [Pitch script](docs/pitch/pitch-script.md), [Pitch deck outline](docs/pitch/pitch-deck.md), [Judge Q&A](docs/pitch/judge-qa.md), [Submission summary](docs/pitch/submission-summary.md), [One-pager (PDF)](docs/pitch/one-pager.pdf), [Demo deck (PPTX)](docs/pitch/LineSleuth-demo.pptx) | 3-minute pitch script, slide outline, judge questions and answers, text for the submission form, one-page summary, demo slide deck (frozen until after 10/10) | 3 分鐘講稿、簡報大綱、評審問答、繳交表單文字、一頁式簡介、demo 簡報檔（10/10 前凍結） | English |
+| Pitch / 簡報 | [Pitch script](docs/pitch/pitch-script.md), [Pitch deck outline](docs/pitch/pitch-deck.md), [Judge Q&A](docs/pitch/judge-qa.md), [Submission summary](docs/pitch/submission-summary.md), [Submission checklist](docs/pitch/submission-checklist.md), [One-pager (PDF)](docs/pitch/one-pager.pdf), [Demo deck (PPTX)](docs/pitch/LineSleuth-demo.pptx) | 3-minute pitch script, slide outline, judge questions and answers, text for the submission form, official deliverables checklist (video, repo, deployed link, PDF deck; eligibility and judging criteria), one-page summary, demo slide deck (frozen until after 10/10) | 3 分鐘講稿、簡報大綱、評審問答、繳交表單文字、官方繳交物清單（影片、repo、部署網址、PDF 簡報；資格與評分對照）、一頁式簡介、demo 簡報檔（10/10 前凍結） | English（checklist 中文） |
 | Demo video / 影片 | [Demo video storyboard](docs/pitch/demo-video-storyboard.md) | Shot-by-shot storyboard and narration for the demo video (frozen until after 10/10) | Demo 影片分鏡與旁白（10/10 前凍結） | 中文（旁白 English） |
 | Design / 設計 | [Storyboard](docs/design/storyboard.md), [UI spec](docs/design/ui-spec.md), [UI v2 spec](docs/design/ui-v2-spec.md), [Line layout v2](docs/design/line-layout-v2.svg) | Demo storyboard with the final English UI copy, UI specification (v1, and v2: evidence charts, root cause on the map, breakpoints, Before/After), plant layout graphic | 分鏡稿（含最終英文 UI 文案）、UI 規格（v1，以及 v2：證據小圖、產線圖根因亮燈、斷點、前後對比）、產線配置圖 | 中文 |
 | Engineering / 工程 | [Architecture](docs/engineering/architecture.md), [Deploy](docs/engineering/deploy.md), [Bug-fix changes](docs/engineering/changes-bugfix.md) | System architecture, Cloud Run deployment steps, change notes for BUG-001 to BUG-008 | 架構、Cloud Run 部署步驟、BUG-001～008 變更說明 | 中文 |
@@ -120,3 +120,9 @@ cp .env.example .env                      # 改 GOOGLE_CLOUD_PROJECT；沒有 GC
 **English**: All new settings are documented in [.env.example](.env.example); the change notes are in [changes-bugfix.md](docs/engineering/changes-bugfix.md).
 
 **繁體中文**：所有新設定見 [.env.example](.env.example)，變更說明見 [changes-bugfix.md](docs/engineering/changes-bugfix.md)。
+
+## License / 授權
+
+**English**: MIT License, see [LICENSE](LICENSE).
+
+**繁體中文**：採用 MIT 授權，見 [LICENSE](LICENSE)。

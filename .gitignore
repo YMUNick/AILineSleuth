@@ -1,5 +1,14 @@
 .venv/
+venv/
 .env
+.env.*
+!.env.example
 __pycache__/
+*.py[cod]
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 app/data/generated/
+# Local-only agent settings (shared agent definitions stay tracked)
+.claude/settings.local.json
+.codex/*.local.*
