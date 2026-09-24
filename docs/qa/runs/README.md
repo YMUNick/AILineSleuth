@@ -29,3 +29,9 @@ min-instances 0 / max-instances 1, presenter key in Secret Manager.
 Deck screenshots in `docs/pitch/deck/assets/` were re-captured from this deployment (real Gemini, no fixture banner).
 Found: Cloud Run's front end reserves `/healthz` (returns 404); `/health` added as the health route.
 Not yet: phone QR scan on a real device, BigQuery backend, X-Forwarded-For spoof check (deploy.md 5.1).
+
+## Redeploy after meeting 3 (2026-09-24, revision linesleuth-00005)
+
+- A1 on the live service at 1280×720: 5 evidence rows visible in the first screen after the conclusion (bar: 3).
+- `DAILY_INVESTIGATION_LIMIT=200` set on the service; in-process counter resets when the instance scales to zero (min 0), so a GCP-side Vertex AI quota is still needed as the hard cap.
+- `/health` returns 200.

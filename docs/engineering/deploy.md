@@ -1,6 +1,6 @@
 # 部署：Cloud Run
 
-> **2026-09-24 已實際部署**：專案 `ailinesleuth-2026`、服務 `linesleuth`（`asia-southeast1`），網址 https://linesleuth-547147056278.asia-southeast1.run.app 。依會議決議先用 `QUERY_BACKEND=local`（映像內建 DuckDB）、`--min-instances 0`（10/16 前不常駐）；BigQuery 尚未切換。健康檢查請用 `/health`（Cloud Run 保留 `/healthz`，會回 404）。實測結果見 `docs/qa/runs/README.md`。
+> **2026-09-24 已實際部署**：專案 `ailinesleuth-2026`、服務 `linesleuth`（`asia-southeast1`），網址 https://linesleuth-547147056278.asia-southeast1.run.app 。依會議決議先用 `QUERY_BACKEND=local`（映像內建 DuckDB）、`--min-instances 0`（10/16 前不常駐）。**資料層是示範用 DuckDB，可換 BigQuery**：程式保留了 BigQuery 後端（`QUERY_BACKEND=bigquery`），但比賽版不切換、目前沒有使用 BigQuery（9/24 第三次會議決議）。Google Cloud 部分實際用的是 Cloud Run＋Vertex AI Gemini。健康檢查請用 `/health`（Cloud Run 保留 `/healthz`，會回 404）。實測結果見 `docs/qa/runs/README.md`。
 
 - 建立：2026-09-24，Eddie（工程）
 - 以下指令會**建立雲端資源、可能產生費用**，請確認 Felix 的預算上限拍板後再跑。
@@ -19,30 +19,33 @@ gcloud config set project $PROJECT_ID
 1. Console → Billing → Budgets & alerts → Create budget。
 2. 範圍選這個專案；金額填老闆拍板的上限（PRD Q3）。
 3. 門檻加三條：**50%、90%、100%**（actual spend），通知寄到老闆信箱。
-4. 注意：預算警示**只通知、不會停機**。真正擋費用的是下面的 `max-instances=1`、程式內的速率限制（`RATE_LIMIT_PER_HOUR` 每 IP、`GLOBAL_RATE_LIMIT_PER_HOUR` 全服務，見 5.1）和 Investigate 按鈕在調查中不能重按。
-5. 達 90% 時照 `docs/roadmap.md` 停損點 ③：調低 `GLOBAL_RATE_LIMIT_PER_HOUR`（和 `RATE_LIMIT_PER_HOUR`）、改用錄影 demo。
+4. 注意：預算警示**只通知、不會停機**。真正擋費用的是下面的 `max-instances=1`、程式內的速率限制（`RATE_LIMIT_PER_HOUR` 每 IP、`GLOBAL_RATE_LIMIT_PER_HOUR` 全服務、`DAILY_INVESTIGATION_LIMIT` 全服務每日，見 5.1）、**GCP 端的 Vertex AI 配額（硬上限，見 5.1）**和 Investigate 按鈕在調查中不能重按。
+5. 達 90% 時照 `docs/roadmap.md` 停損點 ③：調低 `DAILY_INVESTIGATION_LIMIT`、`GLOBAL_RATE_LIMIT_PER_HOUR`（和 `RATE_LIMIT_PER_HOUR`）、改用錄影 demo。
 
 ## 1. 開 API
 
 ```bash
 gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com \
-  aiplatform.googleapis.com bigquery.googleapis.com secretmanager.googleapis.com logging.googleapis.com
+  aiplatform.googleapis.com secretmanager.googleapis.com logging.googleapis.com
 ```
+
+日後要換 BigQuery 時（第 3 步，選用）才加開 `bigquery.googleapis.com`。
 
 ## 2. 服務帳號（最小權限）
 
 ```bash
 gcloud iam service-accounts create linesleuth-run --display-name "LineSleuth Cloud Run"
 gcloud projects add-iam-policy-binding $PROJECT_ID --member serviceAccount:$SA --role roles/aiplatform.user
-gcloud projects add-iam-policy-binding $PROJECT_ID --member serviceAccount:$SA --role roles/bigquery.jobUser
 ```
 
-資料集層級權限（感測器資料唯讀、只能寫工單表）在第 3 步建好 dataset 後設定：
+以下只有換 BigQuery（第 3 步，選用）時才需要：`roles/bigquery.jobUser`（專案層級），以及建好 dataset 後的資料集層級權限（感測器資料唯讀、只能寫工單表）：
 
 - dataset `linesleuth_demo` 給 `roles/bigquery.dataViewer`
 - 表 `work_orders` 給 `roles/bigquery.dataEditor`（Console → 該表 → Share）
 
-## 3. BigQuery 資料
+## 3.（選用）換 BigQuery 時的資料
+
+比賽版**不做這一步**：資料用映像內建的 DuckDB（`QUERY_BACKEND=local`）。這裡保留的是「可換 BigQuery」的步驟，沒跑過回歸前不要對外說已支援。
 
 ```bash
 gcloud auth application-default login
@@ -52,7 +55,7 @@ python -m scripts.load_bigquery --project $PROJECT_ID --dataset linesleuth_demo 
 
 ## 4. Secret Manager
 
-Vertex AI 和 BigQuery 都用服務帳號身分，不需要 API key。唯一的機密是**簡報者金鑰 `PRESENTER_KEY`**（BUG-004，用法見 5.2）。
+Vertex AI（以及日後換 BigQuery 時）都用服務帳號身分，不需要 API key。唯一的機密是**簡報者金鑰 `PRESENTER_KEY`**（BUG-004，用法見 5.2）。
 金鑰直接產生後灌進 Secret Manager，不經過剪貼簿或 shell 歷史：
 
 ```bash
@@ -74,7 +77,7 @@ gcloud run deploy $SERVICE --source . --region $REGION \
   --cpu 1 --memory 1Gi --timeout 120 --concurrency 40 \
   --allow-unauthenticated \
   --set-secrets PRESENTER_KEY=PRESENTER_KEY:latest \
-  --set-env-vars AGENT_MODE=gemini,QUERY_BACKEND=bigquery,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=global,GEMINI_MODEL=gemini-2.5-flash,GEMINI_TEMPERATURE=0,BQ_DATASET=linesleuth_demo,RATE_LIMIT_PER_HOUR=20,GLOBAL_RATE_LIMIT_PER_HOUR=60,TRUSTED_PROXY_HOPS=1,MAX_CONCURRENT_INVESTIGATIONS=3,GEMINI_MAX_RETRIES=2,GEMINI_RETRY_BACKOFF_S=2
+  --set-env-vars AGENT_MODE=gemini,QUERY_BACKEND=local,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=global,GEMINI_MODEL=gemini-2.5-flash,GEMINI_TEMPERATURE=0,RATE_LIMIT_PER_HOUR=20,GLOBAL_RATE_LIMIT_PER_HOUR=60,DAILY_INVESTIGATION_LIMIT=200,TRUSTED_PROXY_HOPS=1,MAX_CONCURRENT_INVESTIGATIONS=3,GEMINI_MAX_RETRIES=2,GEMINI_RETRY_BACKOFF_S=2
 ```
 
 參數理由：
@@ -87,6 +90,8 @@ gcloud run deploy $SERVICE --source . --region $REGION \
 | `--timeout 120` | 單次請求上限；調查本身是背景執行，不受影響。 |
 | `--set-secrets PRESENTER_KEY=...` | 簡報者金鑰（5.2）。第 4 步沒建 secret 的話部署會失敗；暫時不用就拿掉這行。 |
 | `GLOBAL_RATE_LIMIT_PER_HOUR=60` | 全服務每小時上限（5.1），真正的費用天花板。60 是暫定值，Felix 拿到每次調查成本後重算。 |
+| `QUERY_BACKEND=local` | 示範用 DuckDB（映像內建），可換 BigQuery（第 3 步，選用），比賽版不換。 |
+| `DAILY_INVESTIGATION_LIMIT=200` | 全服務每日上限（5.1），超過回 429、畫面顯示「Demo limit reached」。200 是 Felix 的提議值，不是算出來的；`0`＝不限。**min-instances=0 時會歸零**，硬上限靠 GCP 配額（5.1）。 |
 | `TRUSTED_PROXY_HOPS=1` | 直接用 `*.run.app` 網址時是 1（5.1）。 |
 | `GEMINI_MAX_RETRIES=2`、`GEMINI_RETRY_BACKOFF_S=2` | Gemini 逾時／429／5xx 的重試上限，**整個調查合計** 2 次（等 2 秒、4 秒），用完調查就 failed，不會無限重試。一次調查最多呼叫 Gemini `MAX_AGENT_TURNS`＋2 次。細節見 `architecture.md` §6。 |
 
@@ -105,6 +110,9 @@ gcloud run services update $SERVICE --region $REGION --update-env-vars PUBLIC_BA
   - `0`＝完全不看這個標頭，只適合 uvicorn 前面沒有任何代理的情況（Cloud Run 上**不要**用）。
 - Dockerfile 的 `--proxy-headers --forwarded-allow-ips="*"` 會讓 uvicorn 把 `request.client.host` 改成 `X-Forwarded-For` 的**第一個**值（可偽造），所以程式**不**拿它做速率限制；保留這組參數只是為了讓 `X-Forwarded-Proto` 生效（QR 網址用 https、cookie 加 Secure）。
 - `RATE_LIMIT_PER_HOUR`（每 IP）擋單一來源；`GLOBAL_RATE_LIMIT_PER_HOUR`（不分 IP）是**真正的費用天花板**：就算攻擊者換很多真 IP，每小時最多也只會開這麼多次調查。每小時最大 Gemini 花費 ≈ 這個值 × 每次調查成本。被 409 拒絕的請求不扣配額（BUG-005）；簡報者（5.2）不計入也不受限。
+- `DAILY_INVESTIGATION_LIMIT`（預設 200，`0`＝不限）：全服務**每日**可開始的公開調查數，日界線是 **Asia/Taipei 00:00（UTC+8）**。超過時 `POST /api/investigations` 回 **429**，訊息 `Today's demo limit of 200 investigations has been reached. It resets at 00:00 Taipei time (UTC+8). …`（回應標頭 `X-Limit: daily`），前端顯示灰色的「Demo limit reached」卡片，不是錯誤畫面。和 `GLOBAL_RATE_LIMIT_PER_HOUR` 一樣：簡報者 cookie **不計入也不受限**，被 409 拒絕的請求不計入。
+- **程式內的每日上限不是硬上限**：計數只存在記憶體。`--min-instances 0` 時實例閒置一段時間就會關閉，下一次請求開新實例、**計數從 0 重新開始**；重新部署也會歸零；多個實例會各算各的（所以 `--max-instances` 維持 1）。它負責「正常情況」和讓 Quinn 驗得到的超額畫面。
+- **硬上限要在 GCP 端設（老闆做）**：Console → IAM 與管理 → 配額與系統限制 → 篩選 `Vertex AI API`（`aiplatform.googleapis.com`）、找 `gemini-2.5-flash` 的每分鐘／每日請求數 → 編輯配額調低。數值**待估算**（一次調查最多 `MAX_AGENT_TURNS`＋`GEMINI_MAX_RETRIES` 次 Gemini 呼叫）。GCP 配額用完時 Gemini 回 429，程式會重試到上限後讓該次調查 failed（顯示失敗卡，不是每日上限卡）。預算警示只通知、不會擋。
 - **上線後必須實測一次**（Quinn 檢查清單 ④；Eddie 沒在 Cloud Run 上看過實際標頭格式）。這會跑一次真的 N01 調查，花一次 Gemini 費用：
 
   ```bash
@@ -146,10 +154,10 @@ gcloud run services update $SERVICE --region $REGION --update-env-vars PUBLIC_BA
 1. 開 `$URL`，確認**沒有** OFFLINE FIXTURE 黃條，底列顯示 `Agent: <模型名>`。
 2. 按 Investigate 跑主線與正常情境各一次。
 3. Cloud Logging 查 `jsonPayload` 或文字 `"event": "query"`，確認每次函式呼叫都有記錄；查 `"event": "usage"`，確認每次調查都有 `turns` 和 input／output／thinking token（ENH-002，`architecture.md` §6.1）。出現 `"event": "gemini_retry"` 表示碰到逾時或 429，次數有上限（`GEMINI_MAX_RETRIES`）。
-4. 本機對雲端資料跑回歸集：`AGENT_MODE=gemini QUERY_BACKEND=bigquery python -m scripts.run_regression --repeat 3`，≥ 9/10 且灰卡案例全過才算上線（PRD 第 9 節）。
+4. 本機對雲端資料跑回歸集：`AGENT_MODE=gemini QUERY_BACKEND=local python -m scripts.run_regression --repeat 3`，≥ 9/10 且灰卡案例全過才算上線（PRD 第 9 節）。
 5. 照 5.1 用偽造 `X-Forwarded-For` 打一次，確認 log 裡的 `client` 是真 IP。
 6. 照 5.2 在簡報用瀏覽器開 `/?key=...`，`/api/config` 顯示 `"presenter": true`；再用手機（不同瀏覽器）按 Reset，確認大螢幕上的調查沒被取消。
-7. 冷啟動實測、速率限制實測交給 Quinn 的上線前檢查清單。
+7. 冷啟動實測、速率限制與每日上限（超過時的「Demo limit reached」畫面）實測交給 Quinn 的上線前檢查清單。
 
 ## 7. 關掉（比賽結束）
 

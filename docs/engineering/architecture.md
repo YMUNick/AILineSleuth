@@ -2,7 +2,7 @@
 
 - 建立：2026-09-24，Eddie（工程）
 - 依據：`docs/prd.md`（F1–F8）、`docs/design/ui-spec.md`、`docs/design/storyboard.md`
-- 狀態：本機可跑；Gemini 真實呼叫與 BigQuery 後端**尚未驗證**（沒有 GCP 憑證）。
+- 狀態：2026-09-24 已部署到 Cloud Run，真 Gemini 回歸通過。**資料層是示範用 DuckDB（映像內建），可換 BigQuery**：`bigquery` 後端的程式碼保留，但比賽版不切換、沒有實際使用、也沒在雲端驗證過，對外不可說「已支援」（9/24 第三次會議）。
 
 ## 1. 一張圖
 
@@ -18,8 +18,8 @@ FastAPI（app/main.py，Cloud Run 單一服務，1 worker）
    │     └─ conclusion.py            伺服器端規則：≥2 引用才算根因、信心標籤、灰卡 Checked 清單
    └─ QueryExecutor（app/queries/functions.py）5 個固定函式 + 逾時 + 快取退回
          └─ QueryBackend（app/queries/backends.py）
-              ├─ local     DuckDB in-memory，讀 app/data/generated/*.csv
-              └─ bigquery  同一份 SQL 樣板，@參數綁定，DATETIME
+              ├─ local     DuckDB in-memory，讀 app/data/generated/*.csv（示範版與 Cloud Run 實際使用）
+              └─ bigquery  可換：同一份 SQL 樣板，@參數綁定，DATETIME（保留未啟用、未驗證）
 ```
 
 ## 2. 目錄
@@ -36,12 +36,12 @@ FastAPI（app/main.py，Cloud Run 單一服務，1 worker）
 | `app/agent/` | prompt、Gemini 迴圈、離線 fixture、結論規則 |
 | `app/static/` | 前端；`line-layout.svg` 是 `docs/design/line-layout-v2.svg` 的複本（Dana 改圖時要同步複製）。`app.js` 內含小圖繪製（純內嵌 SVG，無圖表函式庫）、產線圖根因／灰卡狀態與鏡頭拉近、Recap |
 | `scripts/run_regression.py` | 回歸集執行器（只接受 AGENT_MODE=gemini） |
-| `scripts/load_bigquery.py` | 建 dataset/表並上傳 CSV（會建立雲端資源，老闆自己跑） |
+| `scripts/load_bigquery.py` | 換 BigQuery 時才用（選用）：建 dataset/表並上傳 CSV（會建立雲端資源，老闆自己跑）；比賽版不跑 |
 | `tests/` | pytest |
 
 ## 3. 資料模型
 
-所有表都有 `row_id`（例 `R01-S01938`、`R01-E004`），證據卡上的高亮就是用它對回原始列。時間一律是**工廠當地時間、無時區**（DuckDB `TIMESTAMP`／BigQuery `DATETIME`），避免 Quinn 擔心的時區錯位。
+所有表都有 `row_id`（例 `R01-S01938`、`R01-E004`），證據卡上的高亮就是用它對回原始列。時間一律是**工廠當地時間、無時區**（DuckDB `TIMESTAMP`；換 BigQuery 時對應 `DATETIME`），避免 Quinn 擔心的時區錯位。
 
 | 表 | 欄位 | 說明 |
 |---|---|---|
@@ -118,10 +118,10 @@ Quinn 的 `docs/qa/test-plan.md` 可以直接引用這張表；要改題目改 `
 | 項目 | 影響 | 何時處理 |
 |---|---|---|
 | 調查狀態放記憶體 | Cloud Run 必須 max-instances=1、1 worker、CPU 常駐 | MVP 可接受 |
-| 速率限制在記憶體，每 IP ＋全服務每小時上限；IP 取 GFE 附加的 `X-Forwarded-For` 段（deploy.md 5.1） | 重啟會清空；多實例無效 | MVP 可接受 |
+| 速率限制在記憶體，每 IP ＋全服務每小時上限＋全服務每日上限 `DAILY_INVESTIGATION_LIMIT`（Asia/Taipei 日界線，簡報者不計）；IP 取 GFE 附加的 `X-Forwarded-For` 段（deploy.md 5.1） | 重啟、min-instances=0 實例關閉都會歸零；多實例各算各的 | 硬上限靠 GCP 端 Vertex AI 配額（deploy.md 5.1） |
 | 調查擁有者用 cookie（`ls_sid`）、簡報者用 `PRESENTER_KEY` cookie；公開調查可同時跑（上限 `MAX_CONCURRENT_INVESTIGATIONS`），查詢執行緒池仍是 4 條 | 瀏覽器擋 cookie 時無法 Reset 自己的調查（仍受上限保護） | MVP 可接受 |
 | 工單編號用 COUNT+1 | 已用行程內鎖序列化；多實例仍會撞號 | max-instances=1 下可接受 |
 | 用輪詢不用 SSE | 每 0.7 秒一個請求 | 夠用，不改 |
-| Gemini 真實呼叫、BigQuery 後端未驗證 | W2/W3 風險 | GCP 開通當天先跑 `tests/test_gemini_live.py` |
+| BigQuery 後端未驗證（Gemini 真實呼叫 9/24 已驗證） | 只是「可換」，不是已支援 | 比賽後有需要才切換並跑回歸 |
 | 前端只做過語法檢查、API 驗證和 headless Chrome 版面量測（UI v2），沒有人在真的瀏覽器點過 | 版面、動畫時序可能要微調 | 主持人／Dana 照 `ui-v2-spec.md` §8 目視驗收 |
 | Recap 人工基準來自環境變數 `MANUAL_BASELINE_MIN`／`MANUAL_BASELINE_SOURCE`（兩個都設才顯示，見 deploy.md 5.3） | 沒設定時畫面只顯示實測秒數和中性文案 | 等訪談數字（storyboard D6） |

@@ -1,184 +1,158 @@
-# 30 秒社群短版：分鏡圖生成 prompt（ChatGPT 圖像生成用）
+# 30 秒社群短版：分鏡與素材指引（01 生成圖 prompt＋真錄屏／實拍指引）
 
 - v0.1，2026-09-24，Dana（設計）。依據 `docs/pitch/demo-video-storyboard.md` v0.3 的 2.4（C 版 30 秒）與第 7 節影片視覺規格；色彩 token 同 7.3／`docs/design/ui-spec.md`、`docs/design/ui-v2-spec.md`。
-- 用途：**內部分鏡圖**，讓老闆和團隊在剪輯前先看到 30 秒的節奏和畫面。成片的 app 畫面仍然照第 0 節「錄的都是真的」，用 Cloud Run＋`gemini` 模式實際錄影，不用生成圖取代。
-- 生成出來的圖放在 `docs/pitch/storyboard-30s/`，檔名 `sb30-01.png`～`sb30-07.png`。
+- v0.2，2026-09-24，Dana（設計）：依 `docs/meetings/2026-09-24-部署後下一步.md` 定案改版。只保留 01 夜班工廠的生成圖 prompt（右下角標 `Illustration / 示意`）；05 改成真手機實拍掃 QR 的拍攝指引；02、03、04、06 改成雲端部署版真錄屏指引，07 改成停在 PPT 封面；字幕的秒數改成實測約 12 秒（與 `demo-video-storyboard.md` 第 0 節第 3 點一致），刪掉 v0.1 的截圖遮 OFFLINE FIXTURE 步驟（PPT 已換成雲端真截圖）。
+- 用途：30 秒 C 版的**分鏡與素材指引**。7 格裡只有 01 是生成圖，其他全部是真的：真錄屏、真手機實拍、PPT 封面。
+- 素材存放：生成圖與實拍素材放 `docs/pitch/storyboard-30s/`（資料夾不存在就自己建），檔名 `sb30-01.png`、`sb30-05-phone.mp4`；錄屏母帶照 `demo-video-storyboard.md` 5.5 放 Drive，不進 repo。
 
-## 0. 先講清楚的三件事
+## 0. 先講清楚的四件事
 
-1. **UI 畫面以真實截圖為主**。圖像模型很容易把 UI 小字畫壞（字母錯亂、數字變形、按鈕文字亂拼）。有 UI 的格子（02、03、04、06）一律上傳對應截圖當參考圖，只讓模型做「放進分鏡框、加鏡頭標示和字幕條」；如果生成後字還是壞掉，**直接用截圖本身當那一格**，旁邊手寫鏡頭標示就好。生成圖只真正負責情境格（01 夜班工廠、05 手機掃 QR）。
-2. **和 2.4 的差異（請 Paula／老闆決定）**：2.4 目前 30 秒全部是 app 畫面。老闆這次要情境格，所以我在 0–3 秒加了一格夜班工廠（01），18–21 秒加了一格手機掃 QR（05），其他格照 2.4 的順序和字幕，秒數往後擠。如果成片最後真的要用情境畫面，建議角落加小標示 `Illustration`（7.5 小標示樣式），和 `Simulated plant data` 同一個位置，避免評審以為是實拍工廠。
-3. **16:9 分鏡，成片是 1:1**：分鏡圖依老闆交代固定 16:9；C 版成片是 1080×1080（2.4、7.1）。所以每個 prompt 都要求主體放在畫面**中間的正方形區域**（左右各留約 22% 當可裁掉的邊），之後裁 1:1 才不會切到重點。
-
-### 截圖上傳前的處理（必做）
-
-目前 `docs/pitch/deck/assets/` 的截圖是 OFFLINE FIXTURE 模式拍的，上傳前用小畫家處理：
-
-- 右下角 `Agent: OFFLINE FIXTURE` 用 #0F1115 實心色塊蓋掉。
-- `06-work-order-phone.png` 最上方黃色 `OFFLINE FIXTURE…` 橫條用 #171A21 實心色塊蓋掉（和 7.10 狀態列遮罩同色）。
-- 右上 `Elapsed 00:0x` 是 fixture 的時間，不是實測值。分鏡圖裡可以留著（內部用），但**不要**把這個數字寫進字幕；成片的 `Elapsed` 以實際錄影那一次為準。
+1. **錄的都是真的**：app 畫面只用雲端部署版錄，網址 `https://linesleuth-547147056278.asia-southeast1.run.app`（真 Gemini，畫面上沒有 OFFLINE FIXTURE 黃條）。不用生成圖取代 app 畫面，也不用本機 fixture 模式。
+2. **唯一的生成圖是 01**，成片右下角一定要標 `Illustration / 示意`，避免評審以為是實拍工廠。
+3. **錄 16:9，成片裁 1:1**：錄影一律 1920×1080；C 版成片是 1080×1080，裁切位置照 `demo-video-storyboard.md` 2.4。拍攝和錄屏時，重點都要落在畫面**中間的正方形區域**（左右各留約 22% 可裁掉的邊）。
+4. **字幕只用已驗證的數字**：唯一可用的秒數是實測「約 12 秒找到根因」（`docs/qa/runs/README.md`，gemini-2.5-flash 回歸集中位數 12.6 秒），字幕必須保留 `measured`。**絕對不出現**：40 分鐘、90 秒、停線損失金額、回歸分數、任何 before/after 對比、任何 Ask。
 
 ---
 
 ## 1. 分鏡總表（30 秒，7 格）
 
-| 格 | 時間碼 | 畫面 | 燒入字幕（英文，短） | 對應 app 狀態／素材 | 生成方式 |
+| 格 | 時間碼 | 畫面 | 燒入字幕（英文，短） | 素材來源 | 參考截圖（`docs/pitch/deck/assets/`） |
 |---|---|---|---|---|---|
-| sb30-01 | 0:00–0:03 | 情境：東南亞／台灣中小代工廠夜班，Line 2 塔燈亮紅，一位主管獨自站在控制台前（背影或側影） | `3 a.m. Line 2 stops.` | —（情境）；接下一格的 `Line 2 stopped` | 純生成 |
-| sb30-02 | 0:03–0:06 | app 全景：Line 2 紅框、L2-M3 `STOPPED`、`Downtime` 在跳；游標按下琥珀色 `Investigate`，L2-M3 出現藍色虛線聚焦圈 | `One click. No prompt.` | `01-overview.png` → `02-investigating.png`（S01＋S03） | 截圖參考 |
-| sb30-03 | 0:06–0:13 | 面板特寫：證據卡逐張長出、sparkline（溫度曲線越過 SOP 虛線變琥珀）；`Elapsed` 下方 `WAITING TIME CUT` 標示 | `Every number traces back to the data.` | `02-investigating.png`（S04） | 截圖參考 |
-| sb30-04 | 0:13–0:18 | 前半 L2-M3 特寫：琥珀實線框、`CV-2 valve` 琥珀膠囊、`ROOT CAUSE` 標籤；後半結論卡 `Confidence: High` | `Root cause found. With evidence.` | `03-root-cause.png`（S06） | 截圖參考 |
-| sb30-05 | 0:18–0:21 | 情境：技術員在機台旁用手機掃 QR，手機上是工單頁（`WO-…`、`ROOT CAUSE`） | `Work order on the technician's phone.` | `06-work-order-phone.png`（S07，需先蓋掉黃條） | 生成＋截圖參考 |
-| sb30-06 | 0:21–0:27 | 灰卡：`Insufficient evidence`、`Checked` 四項；Line 1 灰色虛線＋`No root cause found`；沒有任何機台變色、沒有 `Create work order` | `No evidence? No guess.` | `07-insufficient.png`（S09） | 截圖參考 |
-| sb30-07 | 0:27–0:30 | 結尾卡：`LineSleuth`（`Sleuth` 琥珀）、tagline、聯絡方式、QR 佔位 | 無（字卡本身） | `c-end-1080`（7.4 (4)） | 生成（字少，可控） |
+| sb30-01 | 0:00–0:03 | 情境：中小代工廠夜班，Line 2 塔燈亮紅，主管獨自站在控制台前（背影） | `3 a.m. Line 2 stops.` | **生成圖**（第 3 節 prompt），右下角 `Illustration / 示意` | — |
+| sb30-02 | 0:03–0:06 | Line 2 紅框、L2-M3 `STOPPED`、`Downtime` 在跳；按下琥珀色 `Investigate`，L2-M3 出現藍色虛線聚焦圈 | `One click. No prompt.` | 真錄屏（主線 take） | `01-overview.png` → `02-investigating.png` |
+| sb30-03 | 0:06–0:13 | 面板特寫：證據卡逐張長出、sparkline 越過 SOP 虛線變琥珀；`Elapsed` 下方 `WAITING TIME CUT` | `Every number traces back to the data.` | 真錄屏（主線 take） | `02-investigating.png` |
+| sb30-04 | 0:13–0:18 | 前半 L2-M3 琥珀實線框、`CV-2 valve`、`ROOT CAUSE`；後半結論卡 `Confidence: High` | `Root cause found. With evidence.` | 真錄屏（主線 take） | `03-root-cause.png`、`04-conclusion.png` |
+| sb30-05 | 0:18–0:21 | 真手機對著大螢幕的 QR 掃碼，手機打開工單頁 | `Work order on the technician's phone.` | **真手機實拍**（第 4 節） | `06-wo-modal.png`（大螢幕）、`06-work-order-phone.png`（手機） |
+| sb30-06 | 0:21–0:27 | 灰卡 `Insufficient evidence`、`Checked` 四項；Line 1 灰色虛線＋`No root cause found`；沒有機台變色、沒有 `Create work order` | `No evidence? No guess.` | 真錄屏（灰卡 take） | `07-insufficient.png` |
+| sb30-07 | 0:27–0:30 | 片尾停在 PPT 封面，靜止到最後一格，不淡出成黑畫面 | 無（封面本身） | PPT 封面（`docs/pitch/LineSleuth-demo.pptx` 第 1 頁） | — |
 
-- 字幕選項（可替換 sb30-03 或疊在 sb30-04 下方一行小字）：`About 12 seconds per investigation (measured, gemini-2.5-flash)`。來源：`docs/qa/runs/README.md`，2026-09-24 gemini-2.5-flash 全集 10 個根因 × 3 次的中位數 12.6 s（R01 單題中位數 10.8 s）。注意：這是回歸集中位數，不是影片那一次 take 的秒數，所以必須保留 `measured` 字樣，也不能配任何 before 數字做對比。另外 A 版規則是旁白不唸模型名稱；社群短版字幕要不要保留 `gemini-2.5-flash`，請 Sandy 決定。
-- 畫面上**絕對不出現**：40 分鐘、停線損失金額、90 秒、回歸分數、任何 Ask。
-- 聯絡方式只出現在 sb30-07：`Hung Che Nick Lai · hongchelai@gmail.com`。
+- 實測字幕選項（可替換 sb30-03 的字幕）：`About 12 seconds to a root cause` ＋第二行小字 `(measured median)`。這是回歸集中位數，不是這次 take 的秒數，所以 `measured` 不能拿掉，也不能配任何 before 數字。要不要加模型名稱 `gemini-2.5-flash`，由 Sandy 決定。
+- 參考截圖只用來對照「錄到的畫面應該長這樣」，不直接當成片素材（例外：錄屏失敗時的救急見第 5 節最後一點）。
 
 ---
 
-## 2. 共用風格前綴（每個 prompt 開頭都貼這段）
+## 2. 共用風格前綴（只給 sb30-01 用）
 
 ```text
-STYLE BLOCK — apply to every frame in this series.
-Format: one clean digital storyboard frame, 16:9 landscape, 1920x1080. Thin 1px grey (#4A5263) frame border. Top-left tiny label in plain sans-serif: the frame ID and timecode I give you. Keep the main subject inside the central square area (the middle 56% of the width), because the final video will be cropped to 1:1.
+STYLE BLOCK — apply to this frame.
+Format: one clean digital storyboard frame, 16:9 landscape, 1920x1080. Keep the main subject inside the central square area (the middle 56% of the width), because the final video will be cropped to 1:1.
 Visual style: modern semi-realistic digital illustration with clean lines and soft cinematic lighting, like a professional pre-production storyboard; not a photo, not anime, not 3D render, no film grain, no lens flare.
-Palette (strict): deep industrial dark background #0F1115, dark surfaces #171A21 / #1F232C, text off-white #E8EAED, secondary text #A3AAB8. Amber accent #F5A524 = our highlight and the root cause. Red #F2555A = ONLY for a stopped line / stop alarm. Green #3DD68C = only for running status. Do not introduce other accent colors.
-Typography for any overlay text: plain Arial-like bold sans-serif. Burned-in caption bar: centered in the lower part of the frame, off-white bold text on a dark #0F1115 box at 85% opacity with rounded corners. Render caption text exactly as given, letter by letter; no extra words.
+Palette (strict): deep industrial dark background #0F1115, dark surfaces #171A21 / #1F232C, text off-white #E8EAED, secondary text #A3AAB8. Amber accent #F5A524 = our highlight. Red #F2555A = ONLY for a stopped line / stop alarm. Green #3DD68C = only for running status. Do not introduce other accent colors.
+Typography for any overlay text: plain Arial-like bold sans-serif. Render text exactly as given, letter by letter; no extra words.
 Setting: small contract manufacturer in Southeast Asia or Taiwan — a modest, tidy, well-lit plastic injection molding plant; ordinary modern equipment, safety signage without readable brand names. Avoid stereotypes: no sweatshop imagery, no dirty or chaotic factory, no conical hats, no exaggerated ethnic features; workers look professional and competent, wearing plain work uniforms and safety gear.
-Hard rules: no real brand logos or trademarks anywhere (machines, phones, clothing, screens); no recognizable real person's face — people are shown from behind, in profile, silhouetted, or with face turned away; no numbers other than the ones I explicitly give; no watermarks.
+Hard rules: no real brand logos or trademarks anywhere; no recognizable real person's face — people are shown from behind, in profile, silhouetted, or with face turned away; no numbers or text other than the ones I explicitly give; no watermarks.
 ```
 
 ---
 
-## 3. 每格 prompt
-
-每格的用法：新訊息先貼第 2 節的 STYLE BLOCK，換行，再貼該格 prompt；標「上傳截圖」的格子，同一則訊息附上對應截圖。
-
-### sb30-01　0:00–0:03　夜班停線（純生成）
+## 3. sb30-01　0:00–0:03　夜班停線（生成圖）
 
 ```text
 Frame ID: SB30-01 · 0:00–0:03
 
 Scene: 3 a.m. inside a small plastic injection molding plant in Southeast Asia. Night shift, mostly empty. Three production lines in a row; the middle one (Line 2) has a stack light glowing red #F2555A, casting a soft red glow on the floor and the machine. Lines 1 and 3 show small green status lights.
 Subject: one night-shift supervisor standing alone at a simple control desk with a laptop, seen from behind at a three-quarter angle, face not visible, plain dark work jacket and safety glasses pushed up on the head. Posture: pausing, alert, about to act — calm concern, not panic.
-Camera: wide establishing shot, slightly low angle, eye line toward the red light. Storyboard annotation arrow in amber #F5A524 in a corner: "SLOW PUSH-IN 1.0→1.1".
+Camera: wide establishing shot, slightly low angle, eye line toward the red light.
 Lighting: cool dim overhead industrial lights, the red stack light as the key accent, laptop screen giving a faint cool glow on the supervisor's shoulder. Quiet, late-night mood.
 Laptop screen content: abstract dark dashboard shapes only, no readable text.
-Top-right small outlined label (grey border, no fill): "Simulated plant data".
-Burned-in caption: "3 a.m. Line 2 stops."
+Keep the bottom-right corner and the lower-center area plain and dark with no objects or text — labels and captions will be added in editing.
+No text of any kind in the image.
 ```
 
-### sb30-02　0:03–0:06　一顆按鈕（上傳截圖）
+生成後處理（剪輯時疊上，不讓模型畫字，避免字壞掉）：
 
-附上：`01-overview.png`（已蓋掉 OFFLINE FIXTURE）。如果想同時表現按下後的聚焦狀態，改附 `02-investigating.png`，並把第二段的描述換成「L2-M3 has a blue dashed focus ring」。
+- **右下角標示 `Illustration / 示意`**：用 `demo-video-storyboard.md` 7.5 的「小標示」樣式（灰框、無填色），放在 1:1 裁切後仍看得到的位置：來源座標右緣約 x 1480、下緣約 y 1040（中間正方形的右下角），不是 1920 畫面的最右下角，否則裁 1:1 會被切掉。
+- 右上角小標示 `Simulated plant data`（同 2.4）。
+- 燒入字幕 `3 a.m. Line 2 stops.`，樣式照 7.6 C 版，不要壓到右下角標示。
+- 成片可加 1.0→1.1 慢推（3 秒內）。
 
-```text
-Frame ID: SB30-02 · 0:03–0:06
-
-Use the attached screenshot as the exact UI. Place it as a flat screen recording filling the frame (no laptop bezel, no perspective, no tilt). Keep every piece of UI text exactly as in the screenshot and legible; do not redraw, translate, re-spell or add any UI text or numbers.
-Composition: slight zoom (about 1.33x) framing both the amber "Investigate" button and the red "Molding L2-M3 STOPPED" card in the central square area.
-Storyboard overlays only (drawn on top, clearly as annotations):
-- A white arrow mouse cursor on the amber Investigate button with a single thin white click ripple ring.
-- A small amber annotation note in a corner: "CLICK → app zooms to L2-M3 (blue dashed focus)".
-Burned-in caption: "One click. No prompt."
-```
-
-### sb30-03　0:06–0:13　證據卡（上傳截圖）
-
-附上：`02-investigating.png`（已蓋掉 OFFLINE FIXTURE）。
-
-```text
-Frame ID: SB30-03 · 0:06–0:13
-
-Use the attached screenshot as the exact UI; keep all UI text legible and unchanged, do not redraw or invent any text or numbers.
-Composition: close-up crop (about 1.33x) on the right-hand "Investigation" panel: the panel header with the status chip and Elapsed must stay in frame, plus the "Mold temperature" evidence card with its sparkline where the blue line rises past the dashed SOP limit and turns amber.
-Storyboard overlays only:
-- Directly below the Elapsed text, a small dark label with a 1px grey border: first line "WAITING TIME CUT" in amber bold small caps, second line "Elapsed shows the real time ↑" in off-white.
-- A small amber annotation in a corner: "HARD CUTS between cards · no speed-up".
-No mouse cursor in this frame.
-Burned-in caption: "Every number traces back to the data."
-```
-
-（若採用實測字幕選項，把最後一行換成：`Burned-in caption: "About 12 seconds per investigation" and a smaller second line "(measured, gemini-2.5-flash)"`。）
-
-### sb30-04　0:13–0:18　根因（上傳截圖）
-
-附上：`03-root-cause.png`（已蓋掉 OFFLINE FIXTURE）。
-
-```text
-Frame ID: SB30-04 · 0:13–0:18
-
-Use the attached screenshot as the exact UI; keep all UI text legible and unchanged, do not redraw or invent any text or numbers.
-Show this frame as a two-panel storyboard split side by side, separated by a thin grey line:
-- Left panel "A (0:13–0:15.5)": close-up (about 1.5x) on the red-bordered Line 2 lane: the "Molding L2-M3 STOPPED" card with its amber solid outline, the amber "CV-2 valve" pill and the amber "ROOT CAUSE" tag.
-- Right panel "B (0:15.5–0:18)": close-up on the conclusion card in the right panel: "ROOT CAUSE", "Cooling valve CV-2 stuck at 20% open", "Confidence: High", and "3 independent signals agree · 1 alternative ruled out".
-Small amber annotation: "HARD CUT A → B".
-No mouse cursor. Mood: clarity, a moment of relief.
-Burned-in caption across the bottom of the whole frame: "Root cause found. With evidence."
-```
-
-### sb30-05　0:18–0:21　手機上的工單（生成＋截圖參考）
-
-附上：`06-work-order-phone.png`（已蓋掉頂端黃色 OFFLINE FIXTURE 橫條）。這一格手機螢幕很小，字壞掉的機率最高：生成後如果手機上的字糊掉，剪輯時直接把真實截圖貼進手機螢幕區即可，分鏡圖只要看得出構圖。
-
-```text
-Frame ID: SB30-05 · 0:18–0:21
-
-Scene: next to the stopped molding machine on Line 2 (soft red stack light in the blurred background), a maintenance technician holds a generic smartphone. Shot over the shoulder from behind; only the hands, sleeve and shoulder are visible, no face. Plain work gloves or bare hands, neutral work uniform.
-Phone: generic modern phone with a plain dark #282D38 body, no notch, no camera bump, no buttons, no brand logo.
-Phone screen: use the attached screenshot as the screen content — a dark work order page. Keep the header "WO-0001", "Priority: High" and "ROOT CAUSE" legible if possible; do not invent any other text. If you cannot keep it legible, show the page as a simplified dark layout with the same structure rather than garbled text.
-Camera: medium close-up, phone screen facing the viewer, shallow depth of field, phone in the central square area. Small amber annotation: "SCAN QR → work order opens".
-Lighting: phone screen as a soft key light on the hand, warm amber #F5A524 accent on the "Priority: High" chip, dim cool factory ambient.
-Burned-in caption: "Work order on the technician's phone."
-```
-
-### sb30-06　0:21–0:27　灰卡（上傳截圖）
-
-附上：`07-insufficient.png`（已蓋掉 OFFLINE FIXTURE）。
-
-```text
-Frame ID: SB30-06 · 0:21–0:27
-
-Use the attached screenshot as the exact UI; keep all UI text legible and unchanged, do not redraw or invent any text or numbers. Do not add any red or amber highlight to any machine: every machine stays green "RUNNING".
-Show as a two-panel storyboard split side by side:
-- Left panel "A (0:21–0:24.5)": close-up (about 1.5x) on the grey dashed "Insufficient evidence" card, including the question-mark icon, "No root cause found. LineSleuth will not guess.", the full "Checked" list of four items and "Recommended next step".
-- Right panel "B (0:24.5–0:27)": the left part of the screen: Line 1 with its grey dashed outline and the "No root cause found" badge, all lines running, no work order button.
-Small annotation in grey (not amber): "MUSIC DROPS 1s — emotional beat".
-Mood: calm, honest, trustworthy. No mouse cursor.
-Burned-in caption across the bottom: "No evidence? No guess."
-```
-
-### sb30-07　0:27–0:30　結尾卡（生成）
-
-字很少，模型通常畫得出來；仍然要逐字檢查 email。QR 在分鏡圖只放佔位框，成片用 `c-end-1080` 真實 QR。
-
-```text
-Frame ID: SB30-07 · 0:27–0:30
-
-A static end card on a solid #0F1115 background, centered layout inside the central square area, generous empty space, no illustration, no photo.
-Top: wordmark "LineSleuth" in large bold sans-serif — "Line" in off-white #E8EAED and "Sleuth" in amber #F5A524, no space between them.
-Below: tagline "Every conclusion backed by evidence." in lighter grey #A3AAB8.
-Center: a square placeholder box with a 1px dashed grey (#4A5263) border and the letters "QR" in the middle (do not draw a real QR code).
-Below the box, one line of small text: "Hung Che Nick Lai · hongchelai@gmail.com" — spell it exactly.
-No other text, no numbers, no logos. Small grey annotation in the top-left corner only: "STATIC to the end · no fade to black".
-```
+在 ChatGPT 的做法：開新對話，一則訊息貼第 2 節 STYLE BLOCK＋本節 prompt，比例選橫式 16:9。檢查：主體在中間正方形、紅色只在 Line 2、沒有 logo、沒有可辨識的臉、圖裡沒有任何字。不合格就回覆 `Regenerate. Keep everything the same but fix: …`，只講要修的那一點。定稿存成 `docs/pitch/storyboard-30s/sb30-01.png`。
 
 ---
 
-## 4. 在 ChatGPT 裡的使用步驟
+## 4. sb30-05　0:18–0:21　真手機實拍掃 QR
 
-1. **開一個新對話專門生這一組**，第一則訊息先貼第 2 節 STYLE BLOCK，並加一句：`Remember this style block and apply it to every image I ask for in this chat. Always output 16:9 landscape. Reply "OK" only.` 這樣後面每格比較容易一致。
-2. **每格一則訊息**：再貼一次 STYLE BLOCK（保險，對話長了模型會忘）＋該格 prompt；有「附上」的格子，同一則訊息上傳處理過的截圖。如果介面有尺寸選項，選橫式 16:9。
-3. **重跑到一致再往下**：先生 sb30-01，滿意後在下一格加一句 `Match the lighting, palette and line style of the previous frame (SB30-01).`。檢查清單：
-   - 比例是 16:9、主體在中間正方形區域
-   - 字幕文字逐字正確（特別是 sb30-07 的 email）
-   - 沒有品牌 logo、沒有可辨識的臉
-   - 紅色只出現在停線；灰卡那一格沒有任何機台變色
-   - 沒有多出來的數字
-   不合格就回覆 `Regenerate. Keep everything the same but fix: …`，只講要修的那一點，不要整段重寫，以免其他部分跑掉。
-4. **UI 字壞掉就停手**：sb30-02／03／04／06 重跑兩次字還是壞，就不要再跑，直接用處理過的截圖當那一格，在剪輯軟體或簡報裡手動加字幕條和鏡頭標示。
-5. **下載命名**：`sb30-01.png`、`sb30-02.png` … `sb30-07.png`，兩位數編號，和第 1 節表格一致；同一格有多個版本時加字尾 `sb30-03-b.png`，選定後把定稿改回無字尾的檔名。
-6. **存放位置**：`docs/pitch/storyboard-30s/`（資料夾不存在就自己建）。另外可以把 7 張排成一張總覽圖 `sb30-contact-sheet.png` 放同一個資料夾，會議上一眼看完 30 秒。
-7. 生完後把總覽圖丟回會議，請 Paula 決定第 0 節第 2 點（要不要在成片保留情境格），Sandy 決定實測字幕要不要保留模型名稱。
+目標：一個鏡頭裡**同時看得到大螢幕上的 QR 和手機打開的工單頁**，證明「掃了就開」是真的。不用生成圖。
+
+**器材**
+- 掃碼手機：型號不限，老闆自己的手機就可以。
+- 拍攝機：另一支手機或相機，固定在腳架或靠在桌上，不要手持晃動；橫拍 16:9，1920×1080、30 fps。
+- 大螢幕：筆電或外接螢幕，顯示雲端部署版建立工單後的 modal（QR＋`WO-…`＋`Priority: High`，對照 `06-wo-modal.png`）。
+
+**流程**（一次拍完，不剪、不變速，照 7.10）
+1. 在主線 take 裡按 `Create work order`，modal 停住（主線 take 本來就留 20 秒給掃碼）。
+2. 拍攝機開錄 → 掃碼手機用內建相機對準大螢幕 QR → 點開連結 → 工單頁出現（對照 `06-work-order-phone.png`，看得到 `WO-…`、`ROOT CAUSE`）→ 停 2 秒。
+3. 手機上的 `WO-…` 必須和大螢幕 modal 是同一張工單。掃碼到開頁超過 4 秒就重拍。
+
+**構圖**
+- 過肩或側後方角度：只拍到手、袖子、肩膀，不拍臉。
+- 大螢幕在後方、手機在前方，兩者都要在**中間正方形區域**內（成片要裁 1:1）。
+- 手機螢幕朝向鏡頭約 15–30 度斜角，工單頁頂部的 `WO-…` 看得出來即可，不要求小字全部可讀（細節交給字幕）。
+- 大螢幕上的 QR 在開頁前要清楚入鏡至少 1 秒；手機擋住 QR 的時間只限掃碼那一下。
+
+**光線**
+- 關掉或調暗頂燈，讓兩個螢幕成為主光源，接近夜班氣氛；房間不要全黑，手要看得出輪廓。
+- 大螢幕和手機亮度都調到最高，拍攝機曝光鎖在螢幕上（點螢幕區長按鎖定 AE/AF），避免螢幕過曝成一片白。
+- 避開窗戶和燈具在螢幕上的反光；螢幕出現摩爾紋時，拍攝機稍微拉遠或改一點角度。
+
+**避免拍到個資**
+- 掃碼手機開勿擾模式、關掉所有通知；桌布換成純色或先進 app 再開錄，不要露出主畫面、相簿、聯絡人、行事曆。
+- 手機狀態列（時間、電量、電信商）照 7.10 在剪輯時用 #171A21 色塊蓋掉。
+- 大螢幕只開全螢幕的 app，不能露出網址列、分頁、書籤、工作列、Email、聊天視窗；網址不能帶 `?key=`。
+- 背景不能有名片、證件、白板字、便利貼、門牌、窗外可辨識的街景；螢幕和玻璃上不能倒映出臉。
+- 拍完先整段看一次，確認上面幾項都沒入鏡，再交給剪輯。
+
+**成片**：取工單頁出現前後 3 秒；裁 1:1 以手機和 QR 為中心；燒入字幕 `Work order on the technician's phone.`。如果實拍始終看不清楚，備案是用 A 版 S07 的手機螢幕錄影放進 7.10 的手機外框（仍然是真畫面）。
+
+---
+
+## 5. 真錄屏指引（sb30-02、03、04、06）
+
+**錄影來源**
+- 網址：`https://linesleuth-547147056278.asia-southeast1.run.app`（雲端部署版、真 Gemini）。畫面上**不能**出現 OFFLINE FIXTURE 黃條；底列 `Agent:` 不能是 OFFLINE FIXTURE，出現就停錄、檢查部署設定。
+- 30 秒版和 A 版共用同一場錄影的母帶（`demo-video-storyboard.md` 第 1 節「錄一次，剪三個版本」），不另外錄。
+
+**錄影設定**
+- 1920×1080（CSS 視窗 1920×1080、瀏覽器縮放 100%）；瀏覽器外框、捲軸、系統游標、通知都不入鏡，細項照 7.9。
+- 假游標和點擊波紋照 7.8。
+
+**錄影當天順序**
+1. 確認 Cloud Run `min-instances=1`（錄影當天才調，繳交後調回 0）。
+2. **先暖機一次**：開網址、完整跑一次 `Investigate`，讓冷啟動發生在錄影之前；這一次不錄、不採用。
+3. 按 `1` 重置，開始錄主線 take；按 `2` 重置，錄灰卡 take。
+4. 每個採用的 take 記下 `query_id` 和 `Elapsed`。畫面出現 `Cached` chip 就重錄，不能剪掉或遮住。
+
+**每格對照**
+
+| 格 | 從哪個 take 取 | 要錄到的狀態（對照截圖） | 1:1 裁切 |
+|---|---|---|---|
+| sb30-02 | 主線 take：按 `Investigate` 前 1 秒到聚焦拉近完成 | 起點像 `01-overview.png`（Line 2 紅框、`Downtime` 在跳），按下後像 `02-investigating.png`（藍色虛線聚焦圈、`Investigating`） | 同 2.4 第 2 列 |
+| sb30-03 | 主線 take：證據卡逐張出現 | 像 `02-investigating.png`：面板表頭 chip 與 `Elapsed` 在框內、sparkline 畫完。跳接處疊 `WAITING TIME CUT`，一律硬切、不變速 | 同 2.4 第 3 列 |
+| sb30-04 | 主線 take：結論落地前後 | 前半像 `03-root-cause.png`（L2-M3 琥珀實線框、`CV-2 valve`、`ROOT CAUSE`），後半像 `04-conclusion.png`（`Confidence: High`、理由列） | 同 2.4 第 4 列 |
+| sb30-06 | 灰卡 take：灰卡落地後 | 像 `07-insufficient.png`：`Insufficient evidence`、`Checked` 四項完整、Line 1 灰色虛線＋`No root cause found`、沒有機台變色、沒有 `Create work order` | 同 2.4 第 5 列 |
+
+- 錄屏字幕照第 1 節表格，樣式照 7.6 C 版；同一段內不推近，段落之間硬切（同 2.4）。
+- 錄屏失敗時的救急：deck 截圖也是雲端真畫面，可以暫時當靜態格，但要在交付時註明是哪一格，錄影補好後替換。
+
+---
+
+## 6. sb30-07　0:27–0:30　片尾停在 PPT 封面
+
+- 素材：`docs/pitch/LineSleuth-demo.pptx` 第 1 頁（封面），用 PowerPoint「匯出 → PNG」1920×1080。
+- 1:1 成片：不要裁切封面，改成把 16:9 封面置中、上下補 #0F1115 底色（letterbox），封面上的字才不會被切掉。
+- 從 sb30-06 300ms 交叉淡化進來後完全靜止，停到片尾，不淡出成黑畫面。
+- 封面上如果有數字，只能是已驗證的；有 40 分鐘或 90 秒，先請 Sandy 改 PPT 再匯出。
+- 這一格取代 v0.1 的 `c-end-1080` 結尾卡；`demo-video-storyboard.md` 2.4 最後一列要不要同步，請 Paula 決定。
+
+---
+
+## 7. 交付與檢查
+
+- 10/3 前交：`sb30-01.png` 定稿（本檔負責的唯一生成圖）。
+- 錄影當天（10/17）：主線 take、灰卡 take、`sb30-05-phone.mp4`，照第 4、5 節拍錄。
+- 成片前檢查清單：
+  - 01 右下角有 `Illustration / 示意`，裁 1:1 後仍看得到
+  - 02、03、04、06 沒有 OFFLINE FIXTURE 黃條、沒有 `Cached`、`Elapsed` 是真實時間
+  - 05 同時看得到大螢幕 QR 和手機工單頁，沒有臉、通知、網址列或其他個資
+  - 07 是 PPT 封面，靜止到最後
+  - 全片沒有 40 分鐘、90 秒、停線損失金額、回歸分數；有秒數時只有「約 12 秒（measured）」

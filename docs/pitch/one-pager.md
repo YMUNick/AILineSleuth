@@ -25,15 +25,15 @@ AI Builder Cup 2026 · Manufacturing
 
 ## Solution
 
-One **Investigate** button, no chat box. Gemini calls five fixed, tested BigQuery queries and never writes SQL. Every step becomes an evidence card that opens to its source rows. No evidence, no conclusion: it answers **"Insufficient evidence"** instead of guessing.
+One **Investigate** button, no chat box. Gemini calls five fixed, tested queries and never writes SQL (demo data runs on DuckDB; the data layer can be swapped for BigQuery). Every step becomes an evidence card that opens to its source rows. No evidence, no conclusion: it answers **"Insufficient evidence"** instead of guessing.
 
-**Demo in three steps** (target 90 seconds [to measure])
+**Demo in three steps** (about 12 seconds per investigation; measured median 12.6 s, gemini-2.5-flash, docs/qa/runs)
 
 1. **Alarm.** 03:00, Line 2 turns red; the supervisor presses Investigate.
-2. **Evidence.** Cards appear one by one (temperature, coolant flow, valve, shift log), each tracing back to BigQuery rows.
+2. **Evidence.** Cards appear one by one (temperature, coolant flow, valve, shift log), each tracing back to source data rows.
 3. **Action.** Root cause "cooling valve CV-2 stuck" with a server-scored confidence label; one click creates a work order, opened on a phone by QR.
 
-> 重點：Gemini 只能選固定查詢，數字可回查原始列，證據不足就出灰卡。Demo 三步：亮紅燈按鈕 → 證據卡 → 根因加 QR 工單。
+> 重點：Gemini 只能選固定查詢，數字可回查原始列，證據不足就出灰卡。實測約 12 秒找到根因（中位數 12.6 秒，出處 docs/qa/runs/README.md）；示範用 DuckDB，可換 BigQuery，不能說「已支援」。Demo 三步：亮紅燈按鈕 → 證據卡 → 根因加 QR 工單。
 
 ## Why now, why JAPAC SMBs
 
@@ -67,26 +67,26 @@ Google MDE is the platform our customers can grow into, on the same Google Cloud
 
 ## Built on Google Cloud
 
-**Cloud Run** (one service, Singapore region) · **BigQuery** (plant data, work orders) · **Vertex AI Gemini** function calling over 5 fixed queries, temperature 0 · **Cloud Logging** (every query replayable) · least-privilege **IAM** · budget alerts and rate limits
+**Cloud Run** (one service, Singapore region; demo data in DuckDB inside the image, swappable for BigQuery) · **Vertex AI Gemini** function calling over 5 fixed queries, temperature 0 · **Cloud Logging** (every query replayable) · least-privilege **IAM** · budget alerts and rate limits
 
 > 重點：全部跑在 GCP 新加坡區，每次查詢都有紀錄可以重播。
 
 ## Traction and validation
 
 - Prototype built on simulated data: one stoppage scenario, one healthy-data scenario
-- Regression set: 10 known root causes, 3 with distractors; score [to measure] / 10 (bar: 9/10)
-- Alarm-to-work-order time: [to measure]
+- Regression set: 10 known root causes, 3 with distractors; score 10/10 on real Gemini, 3 runs each, plus 2/2 healthy cases answered "Insufficient evidence" (bar: 9/10; docs/qa/runs)
+- Time to root cause: about 12 s (measured median 12.6 s, max 18.6 s, gemini-2.5-flash, docs/qa/runs)
 - Plant-manager interviews: [pending interviews]; design partners: [pending interviews]
 
-> 重點：原型是模擬資料。回歸分數、實測秒數、訪談場數都還沒有，不能先寫。
+> 重點：原型是模擬資料。回歸分數與實測秒數已有（docs/qa/runs/README.md）；訪談場數還沒有，不能先寫。
 
 ## Team and contact
 
 - Hung Che Nick Lai
-- Contact: hongchelai@gmail.com · Live prototype: [Cloud Run URL / QR]
+- Contact: hongchelai@gmail.com · Live prototype: https://linesleuth-547147056278.asia-southeast1.run.app
 
 > 重點：目前隊員只有 Nick。比賽規定至少 2 人，正式隊員確定後再補上；顧問要另外標示，不能當隊員列。
 
 ---
 
-**40 min [pending interviews] → 90 sec [to measure]. Every conclusion backed by evidence.**
+**Stoppage → root cause in ~12 s (measured median 12.6 s, docs/qa/runs). Every conclusion backed by evidence.**

@@ -191,3 +191,64 @@ def test_no_hard_coded_manual_baseline_in_app():
             text = path.read_text(encoding="utf-8").lower()
             for banned in ("40 min", "40 minutes", "90 sec"):
                 assert banned not in text, (path, banned)
+
+
+# ---------------------------------------------------------------- daily limit (9/24 meeting: DAILY_INVESTIGATION_LIMIT)
+@pytest.fixture
+def daily(browsers, monkeypatch):
+    """Daily limit of 2, hourly limits out of the way; fresh counter."""
+    import app.main as m
+    monkeypatch.setattr(m, "_daily", {"day": None, "count": 0})
+    monkeypatch.setattr(m, "settings", dataclasses.replace(
+        m.settings, rate_limit_per_hour=100, global_rate_limit_per_hour=100, daily_investigation_limit=2))
+    return (m, *browsers)
+
+
+def _start(client):
+    client.post("/api/reset", json={})
+    return client.post("/api/investigations", json={"scenario_id": "N01"})
+
+
+def test_daily_limit_returns_429_with_a_clear_message(daily):
+    m, _, stranger = daily
+    assert _start(stranger).status_code == 201 and _start(stranger).status_code == 201
+    r = _start(stranger)
+    assert r.status_code == 429 and r.headers["x-limit"] == "daily"
+    assert "Today's demo limit of 2 investigations" in r.json()["detail"] and "Taipei" in r.json()["detail"]
+    assert m._daily["count"] == 2  # the refused request is not counted
+
+
+def test_daily_limit_skips_the_presenter_and_resets_next_day(daily, monkeypatch):
+    m, presenter, stranger = daily
+    assert _login(presenter, KEY) is True
+    for _ in range(3):  # like GLOBAL_RATE_LIMIT_PER_HOUR: the presenter is never counted or blocked
+        assert _start(presenter).status_code == 201
+    assert m._daily["count"] == 0
+    _start(stranger), _start(stranger)
+    assert _start(stranger).status_code == 429
+    monkeypatch.setattr(m, "_today", lambda: "2099-01-01")  # 00:00 Asia/Taipei passed
+    assert _start(stranger).status_code == 201 and m._daily == {"day": "2099-01-01", "count": 1}
+
+
+def test_daily_limit_zero_means_no_limit(daily, monkeypatch):
+    m, _, stranger = daily
+    monkeypatch.setattr(m, "settings", dataclasses.replace(m.settings, daily_investigation_limit=0))
+    for _ in range(4):
+        assert _start(stranger).status_code == 201
+
+
+def test_daily_limit_day_starts_at_midnight_taipei():
+    import app.main as m
+    from datetime import datetime, timezone
+    assert m.DAY_TZ.utcoffset(None).total_seconds() == 8 * 3600
+    assert datetime(2026, 9, 24, 16, 0, tzinfo=timezone.utc).astimezone(m.DAY_TZ).date().isoformat() == "2026-09-25"
+
+
+def test_daily_limit_setting_is_validated(monkeypatch):
+    from app.config import Settings
+    monkeypatch.setenv("DAILY_INVESTIGATION_LIMIT", "-1")
+    with pytest.raises(ValueError, match="DAILY_INVESTIGATION_LIMIT"):
+        Settings.from_env().validate()
+    monkeypatch.setenv("DAILY_INVESTIGATION_LIMIT", "0")
+    Settings.from_env().validate()
+    assert Settings.from_env().daily_investigation_limit == 0

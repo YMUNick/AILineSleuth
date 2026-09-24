@@ -3,6 +3,7 @@
 - 草稿 v0.1，2026-09-24，Paula（PM）。老闆交代：先把分鏡討論定，再動手做影片。
 - v0.2，2026-09-24，Sandy（業務）：S01 hook 加上地點（Southeast Asia），開場不再先靜止 2 秒；S02、S04、S08、S10 各改一句旁白，讓非母語評審更好懂；S11 從 16 秒延長到 18 秒並重寫：預設只講我們服務誰和怎麼收費，不描述競品，對比句標 `[to verify]`。多出的 2 秒從 S02、S04 各挪 1 秒，總長仍是 2:55。2.2 補上 SRT 必須燒進畫面時的短標語精簡規則。另外回覆第 6 節 S-1～S-5（標「Sandy 回覆」），並更新第 1 節 C 版規格、第 4 節競品列、5.7 時程。
 - v0.3，2026-09-24，Dana（設計）：回覆第 6 節 D-1～D-6 與 Sandy 追加的兩件（D-7 S11 地圖與中性兩欄、D-8 S02 原話字卡），標「Dana 回覆」；新增第 7 節「影片視覺規格」；2.2 每一鏡補上「畫面執行」（素材、入點狀態、構圖與推近目標、疊加層、出點）；剪接標示改名為 `WAITING TIME CUT`；字卡字體改成和簡報一致（Arial／Calibri）；2.4 補 1:1 裁切位置；2.5 替代畫面 ②、④ 改用第 7 節版型；5.6 素材 #6–#8 更新。建議 S05／S06 對調成照時間順序（見 S05，待 Paula 決定，2.1 時間碼未改）。
+- 2026-09-24，Paula（PM）：依 `docs/meetings/2026-09-24-部署後下一步.md` 定案，2.4 C 版片尾改成停在 PPT 封面，並註明 C 版分鏡以 `storyboard-30s-image-prompts.md` v0.2 為準。
 - 依據：`docs/meetings/2026-09-24-駭客松主題方向.md`、`docs/prd.md`、`docs/design/storyboard.md`（現場五格分鏡、UI 文案定稿）、`docs/pitch/pitch-script.md`、`docs/pitch/one-pager.md`、`docs/pitch/submission-summary.md`
 - 畫面以 **UI 改版 v2** 為準（Dana 的 `docs/design/ui-v2-spec.md`，規格已定稿、實作中，以及 `docs/design/line-layout-v2.svg`）：① 證據卡 sparkline ② 根因找到後 L2-M3／CV-2 高亮並標 `ROOT CAUSE` ③ 窄螢幕版面修正 ④ 結尾 before/after 對比。v2 規格定稿後，本文件的畫面描述跟著對齊；UI 文案一律以 `storyboard.md` §5 為準。
 - 搭配：`docs/pitch/pitch-deck.md`（投影片編號）、`docs/manual/user-manual.md` §3.8 簡報者模式、§4.2 快捷鍵、`docs/qa/test-plan.md` §6 現場備援
@@ -20,9 +21,9 @@
 
 ## 0. 三條底線（所有版本共用）
 
-1. **錄的都是真的**：只用 Cloud Run 部署版、`gemini` 模式、BigQuery 後端錄影。畫面不能出現 OFFLINE FIXTURE 黃條。每個採用的 take 都要記下 `query_id` 和 `Elapsed`，評審問「是不是寫死的」時拿得出 Cloud Logging 紀錄（對應 `judge-qa.md` Q12）。
+1. **錄的都是真的**：只用 Cloud Run 部署版、`gemini` 模式、映像內建 DuckDB 示範資料錄影（可換 BigQuery，但影片不能說已支援 BigQuery）。畫面不能出現 OFFLINE FIXTURE 黃條。每個採用的 take 都要記下 `query_id` 和 `Elapsed`，評審問「是不是寫死的」時拿得出 Cloud Logging 紀錄（對應 `judge-qa.md` Q12）。
 2. **只剪等待，不改結果**：繳交版可以剪掉等待時間（跳接，不變速），剪接處要標示；`Elapsed` 永遠是真實時間。備援版不剪也不變速。出現 `Cached` chip 就重錄，不能剪掉或遮住。
-3. **沒驗證的數字不出現**：40 分鐘、停線損失、90 秒、回歸分數都要照第 4 節處理。影片**沒有 Ask 段**，結尾只放聯絡方式和 prototype 連結。
+3. **沒驗證的數字不出現**：40 分鐘、停線損失都要照第 4 節處理。已驗證可用的只有實測值：約 12 秒找到根因（中位數 12.6 秒）、回歸 10/10（出處 `docs/qa/runs/README.md`）。「90 秒」已停用。影片**沒有 Ask 段**，結尾只放聯絡方式和 prototype 連結。
 
 ---
 
@@ -91,7 +92,7 @@ Sandy 註：如果上傳平台不支援 CC、SRT 必須燒進畫面，短標語�
 - **音效／音樂**：警報「嗶」兩聲放在 0:00，音量要小，不要刺耳；低沉 pad 同時淡入。
 - **Sandy 註**
   - 前 10 秒只回答三件事：誰、在哪、出了什麼事。加上 `in Southeast Asia`，讓 JAPAC 評審一開頭就知道是他們的區域；台灣放到 S11 一起講。前 3 秒要有聲音和動態，靜止畫面容易被當成影片還沒開始。
-  - Google Cloud 不必塞進 hook：0:00 開場就是真的 app 畫面，0:28 的 S04 就會唸到 Gemini on Vertex AI 和 BigQuery，已經夠早。
+  - Google Cloud 不必塞進 hook：0:00 開場就是真的 app 畫面，0:28 的 S04 就會唸到 Gemini on Vertex AI，已經夠早（BigQuery 只能說「可換」，不在旁白裡唸）。
   - `on their own` 改成 `alone`：意思一樣，非母語評審比較好懂。
 
 #### S02　痛點（0:10–0:20）Slide 2
@@ -142,7 +143,7 @@ Sandy 註：如果上傳平台不支援 CC、SRT 必須燒進畫面，短標語�
   - 跳接點：只能剪在「上一張卡已經停夠、下一張卡還是 skeleton `Querying…`」的區間；卡片從 skeleton 變成完成的那一刻不能剪掉。一律硬切，不用交叉淡化（淡化會疊出兩個 `Elapsed` 數字）。每個剪接點都疊 `WAITING TIME CUT`。
   - 疊加：BL 短標語 `5 fixed queries. Gemini never writes SQL.`（0:29–0:35，對齊旁白第一句）；剪接點的 `WAITING TIME CUT`。
   - 出點：第 5 張卡（`Shift & maintenance log`）畫完線後停 2 秒，0:57 接下一鏡。
-- **旁白**：Gemini on Vertex AI doesn't write SQL. It picks from five fixed, tested queries on BigQuery, and every step becomes an evidence card. The alarm fired at 3:00. Mold temperature climbed past the SOP limit. Coolant flow fell far below its baseline. Valve CV-2 was commanded to open, but it stayed almost closed. And the 2:30 shift handover? Checked, and ruled out.（63 字，約 25 秒；本鏡縮成 29 秒仍留 4 秒給卡片出現）
+- **旁白**：Gemini on Vertex AI doesn't write SQL. It picks from five fixed, tested queries, and every step becomes an evidence card. The alarm fired at 3:00. Mold temperature climbed past the SOP limit. Coolant flow fell far below its baseline. Valve CV-2 was commanded to open, but it stayed almost closed. And the 2:30 shift handover? Checked, and ruled out.（63 字，約 25 秒；本鏡縮成 29 秒仍留 4 秒給卡片出現）
 - **字幕**：`5 fixed queries. Gemini never writes SQL.`
 - **音效／音樂**：每張卡出現時一聲很輕的「tick」。
 - **備註**：旁白刻意不唸感測器數值。數字交給畫面上的卡片和 sparkline 呈現；模擬資料之後如果調整，只要重錄畫面，不用重錄旁白。
@@ -157,11 +158,11 @@ Sandy 註：如果上傳平台不支援 CC、SRT 必須燒進畫面，短標語�
   - 腳本動作：點結論卡裡的引用 chip `#3` → app 自動捲到 #3、展開、閃一次藍框 → 點 `View source rows (12)` → 如果 `02:41` 那一列或表格下方的 `Source:` 行不在可見範圍，在證據列裡捲到兩者都看得到 → 停 4 秒 → 點 `Hide source rows`。
   - 構圖：K3（1.5 倍，約 1280×720 的視窗，以展開的 #3 卡和原始列表格為中心），14px 的表格字等於放大到約 21px。`Source: … · query {query_id}` 那一行加琥珀重點框 3 秒；不再第二次推近，框出來就夠了。
   - 游標：點擊時出現，最後一下點完就移到產線圖區並淡出。
-  - 疊加：BL 短標語 `Every number traces back to BigQuery.`（表格展開後出現，停 4 秒）。
+  - 疊加：BL 短標語 `Every number traces back to the source rows.`（表格展開後出現，停 4 秒）。
   - **建議照時間順序剪（請 Paula 決定）**：S04 → S06 → S05。先講結論、再點引用回查原始列，是「主張 → 證據」的順序，也符合第 0 節「只剪等待，不改結果」的精神（不打亂事件先後）。對調後時間碼是 S06 0:57–1:13、S05 1:13–1:23，其他鏡不變，旁白不用改。
   - 如果維持目前順序（S05 在 S06 前面）：入點取 #3 已經展開之後（點 chip 的動作不能入鏡），K3 視窗不能包含面板頂端的結論卡和產線圖，以免提前揭曉根因；#3 卡上的 `Cited in conclusion` tag 會入鏡，可以接受。
-- **旁白**：Every number traces back to the source rows in BigQuery, and every query is logged, so any investigation can be replayed.
-- **字幕**：`Every number traces back to BigQuery.`
+- **旁白**：Every number traces back to its source rows, and every query is logged, so any investigation can be replayed.
+- **字幕**：`Every number traces back to the source rows.`
 - **音效／音樂**：點擊聲；表格展開時音樂稍微壓低，讓畫面說話。
 
 #### S06　根因與信心（1:07–1:23）F5、v2 ②
@@ -222,8 +223,8 @@ Sandy 註：如果上傳平台不支援 CC、SRT 必須燒進畫面，短標語�
 - **音效／音樂**：音樂小幅上揚。
 - **備註**
   - {after} 一定要等於畫面上的 `Elapsed`。
-  - **不能刻意挑最快的 take**：採用的 take，`Elapsed` 不能低於 Quinn 實測的中位數 `[to measure]`，這樣這個數字才有代表性。
-  - 影片不使用「40 min → 90 sec」口號，也不唸「90 seconds」，只呈現實測值。
+  - **不能刻意挑最快的 take**：採用的 take，`Elapsed` 不能低於 Quinn 實測的中位數 12.6 秒（gemini-2.5-flash，`docs/qa/runs/README.md`；10/8 雲端驗證若不同以新值為準），這樣這個數字才有代表性。
+  - 影片不使用「40 min → 90 sec」舊口號，只呈現實測值（約 12 秒）。
 
 #### S09　灰卡：沒有證據就不下結論（1:46–2:12）F8、F6
 
@@ -249,15 +250,15 @@ Sandy 註：如果上傳平台不支援 CC、SRT 必須燒進畫面，短標語�
 
 #### S10　Built on Google Cloud（2:12–2:29）Slide 7、F3
 
-- **畫面**：簡報頁 Slide 7 的架構圖（Browser / Phone → Cloud Run → Vertex AI Gemini、BigQuery → Cloud Logging），使用 Google Cloud 官方產品圖示。
+- **畫面**：簡報頁 Slide 7 的架構圖（Browser / Phone → Cloud Run → Vertex AI Gemini、DuckDB 示範資料（可換 BigQuery） → Cloud Logging），使用 Google Cloud 官方產品圖示。
 - **動作**：依旁白順序逐一點亮產品圖示。選做：插入 3 秒 Cloud Logging 畫面，顯示和 S05 同一個 `query_id` 的紀錄（專案 ID 要遮掉；v0.3 改成實心色塊，不用馬賽克，見 7.5）。
 - **畫面執行（Dana）**
   - 素材：`s10-architecture`（Slide 7 影片版，版面見 7.4），一張「全部變暗」的底圖＋每個方塊「點亮」狀態各一張透明 PNG。
   - 版面：同 Slide 7，拿掉底部 4 個 chip 和註腳（旁白沒講，17 秒內也沒人讀得完）；四個 Google Cloud 方塊左側加官方產品圖示。Cloud Run 副標在部署區域查證前只寫 `UI + API`，查證後才加 `asia-southeast1` `[to verify]`。有回歸分數時，底部放一條 `Regression set: {score}/10 known root causes` `[to measure]`（分數用綠色，見 7.3）。
-  - 動作：開場所有方塊 35% 不透明，`Browser · Phone` 是 100%。旁白唸到 `Cloud Run`、`BigQuery`、`Gemini on Vertex AI`、`Cloud Logging` 時，對應方塊和連過去的箭頭亮到 100%（300ms）。全部亮完就靜止，不推近。
+  - 動作：開場所有方塊 35% 不透明，`Browser · Phone` 是 100%。旁白唸到 `Cloud Run`、`demo data`、`Gemini on Vertex AI`、`Cloud Logging` 時，對應方塊和連過去的箭頭亮到 100%（300ms）。全部亮完就靜止，不推近。
   - 選做 Cloud Logging 插入（3 秒）：旁白唸到 Cloud Logging 時，在頁面上疊一張截圖卡（寬 1400、深色外框，和簡報的截圖框同樣式；後面的頁面壓暗 60%）。截圖只裁 log 那一列，`query_id` 加琥珀重點框；專案 ID、專案編號、服務帳號、IP 全部用實心色塊蓋掉。Cloud Console 是白底，截圖只裁需要的那一小塊，不要整頁白畫面入鏡。
   - 疊加：無，`Built on Google Cloud` 就是頁面標題。
-- **旁白（有分數版）**：It all runs on Google Cloud: Cloud Run in Singapore `[to verify]`, plant data in BigQuery, Gemini on Vertex AI with function calling, and Cloud Logging for every query. We retest every prompt change on ten known cases. Score: {score} `[to measure]` out of ten.
+- **旁白（有分數版）**：It all runs on Google Cloud: Cloud Run in Singapore, demo data in DuckDB that can be swapped for BigQuery, Gemini on Vertex AI with function calling, and Cloud Logging for every query. We retest every prompt change on ten known cases. Score: ten out of ten.（實測 10/10，出處 `docs/qa/runs/README.md`；10/8 雲端驗證若不同以新值為準）
 - **旁白（無分數替代）**：同上，但刪掉最後一句 "Score: … out of ten."
 - **Sandy 註**：`We rerun ten known root causes` 聽起來像在「重跑根因」，改成 `retest every prompt change on ten known cases`，意思比較清楚。有分數版約 41 字（16.4 秒），超過「比秒數短 1–3 秒」的原則，請 Paula 決定要刪哪幾個字；我建議不要刪 `with function calling` 和 `Cloud Logging`，Google Cloud 評審最在意這兩個。
 - **字幕**：`Built on Google Cloud`；有分數時另加 `Regression set: {score}/10 known root causes`
@@ -338,8 +339,9 @@ Sandy 註：如果上傳平台不支援 CC、SRT 必須燒進畫面，短標語�
 | 6–15 | 證據卡 sparkline 快剪（標 `WAITING TIME CUT`） | `Every number traces back to the data.` | 810×810，約 x 1100–1910、y 96–906：面板表頭的 `Elapsed` 和最新一張完整卡都在框內（`WAITING TIME CUT` 要指得到 `Elapsed`），1.33 倍 |
 | 15–20 | CV-2 高亮、`ROOT CAUSE`、結論卡 | `Root cause found. With evidence.` | 前 2.5 秒 720×720 以 L2-M3 為中心（1.5 倍）；後 2.5 秒 810×810 以結論卡為中心 |
 | 20–26 | 灰卡＋Line 1 灰色虛線 | `No evidence? No guess.` | 前 3.5 秒 810×810 以灰卡為中心；後 2.5 秒左欄 1080×1080（Line 1 灰色虛線＋徽章） |
-| 26–30 | 結尾字卡（同 S12，拿掉小字） | `LineSleuth` · 連結 | 不裁切，用 1080×1080 專用版 `c-end-1080`（7.4） |
+| 27–30 | 片尾停在 PPT 封面（`docs/pitch/LineSleuth-demo.pptx` 第 1 頁），靜止到最後一格，不淡出成黑畫面 | 無（封面本身） | 不裁切：16:9 封面置中，上下補 #0F1115 底色（letterbox） |
 
+- **9/24 第三次會議定案（Paula 同步）**：C 版片尾改成停在 PPT 封面，取代原本的結尾字卡 `c-end-1080`。C 版的格數、時間碼、素材來源（01 生成圖標「示意」、05 真手機實拍、其餘真錄屏）以 `docs/pitch/storyboard-30s-image-prompts.md` v0.2 為準；本表只保留各段的 1:1 裁切位置供參照。A 版 S12 結尾字卡不變。
 - 只用音樂和燒入字幕；不出現任何未驗證數字，也不出現 before/after 數字。
 - 畫面從母帶裁切平移，不另外錄窄版面（D-5 已定）。每一段只取一個大元素特寫，字交給燒入字幕（樣式見 7.6 C 版）。裁切段落之間一律硬切；同一段內不做推近。
 
@@ -378,8 +380,8 @@ Sandy 註：如果上傳平台不支援 CC、SRT 必須燒進畫面，短標語�
 |---|---|---|---|---|---|---|
 | 調查時間「約 40 分鐘」 | S02、S08 | `[pending interviews]` | 旁白＋字幕帶出數字；before/after 卡顯示 before | S02 無數字句；S08 只講 after 或用完全無數字句 | Sandy（訪談）、Felix（數字表） | 10/15 |
 | 每小時停線損失 X | S02 | `[pending interviews]` | 只能用受訪者的原話 | "every minute costs money" | Sandy、Felix | 10/15 |
-| 90 秒 | 全片都不用這個口號 | `[to measure]` | S08 用這次 take 的實測 `Elapsed`，並符合「不低於中位數」 | 完全無數字句 | Quinn（實測 10 次） | 10/16 |
-| 回歸集分數 | S10 | `[to measure]` | "Score: {score} out of ten." | 刪掉那一句 | Quinn | 10/16 |
+| 調查秒數（取代舊的「90 秒」） | S08 | 已實測：中位數 12.6 秒（`docs/qa/runs/README.md`） | S08 用這次 take 的實測 `Elapsed`，並符合「不低於中位數」 | 完全無數字句 | Quinn（10/8 雲端再驗） | 10/16 |
+| 回歸集分數 | S10 | 已實測：10/10（`docs/qa/runs/README.md`） | "Score: ten out of ten." | 刪掉那一句 | Quinn（10/8 雲端再驗） | 10/16 |
 | 部署區域「Singapore」 | S10 | `[to verify]` | 照講 | 刪掉 "in Singapore" | 老闆（看部署設定） | 10/16 |
 | 競品描述 | S11（影片一律不點名，S-2 已定） | `[to verify]` | Sandy 查完三家官網的公開定位後，才可以改用 S11「對比版」那一句（仍然不點名） | S11 預設版：只講我們服務誰，不描述別人 | Sandy | 10/15 |
 
@@ -444,7 +446,7 @@ is on their own.
 
 | # | 素材 | 誰準備 | 期限 |
 |---|---|---|---|
-| 1 | Cloud Run 部署版（`gemini` 模式、BigQuery、v2 UI），記下版本 | 老闆（Eddie 規格） | 10/13 |
+| 1 | Cloud Run 部署版（`gemini` 模式、DuckDB 示範資料、v2 UI），記下版本 | 老闆（Eddie 規格） | 10/13 |
 | 2 | 產品名定案（PRD Q7）；錄完之後改名就要重錄 | 老闆 | 10/13 |
 | 3 | Playwright 錄影腳本（1080p、假游標、點擊順序照本文件、同時截 5 張分鏡圖） | 老闆（Eddie 規格） | 10/13 |
 | 4 | 主線、灰卡各 3 個 take，含原始列點開畫面；take 紀錄表（`query_id`、`Elapsed`、WO id） | 老闆 | 10/14 |
@@ -593,7 +595,7 @@ is on their own.
   - 右：四張檔案卡，490×115、s2 底、1px border、圓角 14，位置 (1066, 230)、(1195, 360)、(1109, 504)、(1325, 634)；檔名 Calibri 32px text2，左內距 36px。
   - 拿掉：`X*`、`~40 min*`、`The night supervisor is alone` 三個 bullet 和註腳。
 - **Slide 7 影片版 `s10-architecture`**
-  - 方塊位置同簡報：`Browser · Phone` (86, 432)、`Cloud Run` (619, 432)，各 403×151；`Vertex AI Gemini` (1195, 266)、`BigQuery` (1195, 432)、`Cloud Logging` (1195, 598)，各 634×151。
+  - 方塊位置同簡報：`Browser · Phone` (86, 432)、`Cloud Run` (619, 432)，各 403×151；`Vertex AI Gemini` (1195, 266)、`DuckDB · demo data`（副標 `swappable for BigQuery`，同 Slide 7） (1195, 432)、`Cloud Logging` (1195, 598)，各 634×151。
   - 四個 Google Cloud 方塊：左內距 24px 放官方產品圖示 56×56，標題和副標往右移 80px。
   - 拿掉底部 chip 列和註腳。回歸分數條（只在有實測分數時）：(86, 828)，1748×86，s2 底，Arial Bold 36px：`Regression set: ` text＋`{score}/10` green＋` known root causes` text。
 - **S11 合成頁 `s11-default`／`s11-compare`**
@@ -654,7 +656,7 @@ is on their own.
 | 遮蔽色塊 | S10 Cloud Logging 截圖 | — | s3 實心矩形、不寫字；不用馬賽克或模糊（有機會被還原） | 蓋住專案 ID、專案編號、服務帳號、IP、個人 email |
 | 截圖卡 | S10 選做插入 | — | 寬 1400、2px borderStrong 外框、圓角 12；後面的頁面壓暗 60% | 畫面置中，3 秒 |
 
-短標語全文（照 2.2）：S01 `03:00 — Line 2 stops.`、S03 `One click. No prompt.`、S04 `5 fixed queries. Gemini never writes SQL.`、S05 `Every number traces back to BigQuery.`、S06 `Root cause + confidence + what was ruled out.`、S07 `Work order on the technician's phone.`、S09 `No evidence, no conclusion.`。SRT 必須燒入時只留 S01、S04、S09（S11 那一句本來就排在頁面上）。
+短標語全文（照 2.2）：S01 `03:00 — Line 2 stops.`、S03 `One click. No prompt.`、S04 `5 fixed queries. Gemini never writes SQL.`、S05 `Every number traces back to the source rows.`、S06 `Root cause + confidence + what was ruled out.`、S07 `Work order on the technician's phone.`、S09 `No evidence, no conclusion.`。SRT 必須燒入時只留 S01、S04、S09（S11 那一句本來就排在頁面上）。
 
 ### 7.6 字幕
 

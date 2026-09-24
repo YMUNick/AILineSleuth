@@ -42,6 +42,7 @@ class Settings:
     fixture_step_delay_s: float
     rate_limit_per_hour: int
     global_rate_limit_per_hour: int  # all clients together: the real cost ceiling (BUG-003)
+    daily_investigation_limit: int  # all public clients together, per Taipei calendar day; 0 = no limit
     trusted_proxy_hops: int  # X-Forwarded-For entries appended by trusted proxies (Cloud Run GFE = 1)
     max_concurrent_investigations: int  # public (non-presenter) investigations running at once (BUG-004)
     presenter_key: str  # secret; /?key=<it> marks the presenter's browser (BUG-004). Empty = feature off
@@ -67,6 +68,7 @@ class Settings:
             fixture_step_delay_s=float(_env("FIXTURE_STEP_DELAY_S", "1.0")),
             rate_limit_per_hour=int(_env("RATE_LIMIT_PER_HOUR", "20")),
             global_rate_limit_per_hour=int(_env("GLOBAL_RATE_LIMIT_PER_HOUR", "60")),
+            daily_investigation_limit=int(_env("DAILY_INVESTIGATION_LIMIT", "200")),
             trusted_proxy_hops=int(_env("TRUSTED_PROXY_HOPS", "1")),
             max_concurrent_investigations=int(_env("MAX_CONCURRENT_INVESTIGATIONS", "3")),
             presenter_key=_env("PRESENTER_KEY", ""),
@@ -88,6 +90,8 @@ class Settings:
             raise ValueError("GEMINI_MAX_RETRIES must be 0-5")
         if not 0 <= self.gemini_retry_backoff_s <= 30:
             raise ValueError("GEMINI_RETRY_BACKOFF_S must be 0-30 seconds")
+        if self.daily_investigation_limit < 0:
+            raise ValueError("DAILY_INVESTIGATION_LIMIT must be >= 0 (0 = no limit)")
         if self.trusted_proxy_hops < 0:
             raise ValueError("TRUSTED_PROXY_HOPS must be >= 0")
         if self.presenter_key and len(self.presenter_key) < 16:

@@ -5,9 +5,9 @@
 
 ## About / 簡介
 
-**English**: An incident-investigation copilot for night-shift supervisors at small and mid-sized contract manufacturers in Southeast Asia and Taiwan. Press Investigate once: Gemini finds evidence in BigQuery through fixed query functions, works out the root cause and opens a work order, cutting a line-stoppage investigation from 40 minutes `[待訪談驗證]` to 90 seconds `[待實測]`, with every conclusion traceable to its evidence.
+**English**: An incident-investigation copilot for night-shift supervisors at small and mid-sized contract manufacturers in Southeast Asia and Taiwan. Press Investigate once: Gemini finds evidence in the plant data through fixed query functions (the demo runs on DuckDB; the data layer can be swapped for BigQuery), works out the root cause and opens a work order in about 12 seconds per investigation (measured median 12.6 s, gemini-2.5-flash, [docs/qa/runs](docs/qa/runs/README.md)), with every conclusion traceable to its evidence. The manual baseline today, about 40 minutes, is `[待訪談驗證]`.
 
-**繁體中文**：給東南亞和台灣中小代工廠夜班主管用的異常調查 Copilot：一按 Investigate，Gemini 用固定查詢函式在 BigQuery 找證據、推出根因、開出工單，把停線調查從 40 分鐘 `[待訪談驗證]` 縮到 90 秒 `[待實測]`，而且每個結論都查得到證據。
+**繁體中文**：給東南亞和台灣中小代工廠夜班主管用的異常調查 Copilot：一按 Investigate，Gemini 用固定查詢函式在工廠資料裡找證據（示範用 DuckDB，可換 BigQuery）、推出根因、開出工單，實測約 12 秒找到根因（中位數 12.6 秒，gemini-2.5-flash，出處 [docs/qa/runs](docs/qa/runs/README.md)），而且每個結論都查得到證據。目前人工調查約 40 分鐘 `[待訪談驗證]`。
 
 **English**: Entry for AI Builder Cup 2026 (Manufacturing theme); submission target 10/17. Numbers marked `[待訪談驗證]` (pending interviews) or `[待實測]` (pending measurement) are targets, not verified facts.
 
@@ -88,6 +88,7 @@ cp .env.example .env                      # 改 GOOGLE_CLOUD_PROJECT；沒有 GC
 |---|---|---|---|
 | `RATE_LIMIT_PER_HOUR` | `20` | Investigations per client IP per hour | 每 IP 每小時可開始的調查數 |
 | `GLOBAL_RATE_LIMIT_PER_HOUR` | `60` | Investigations per hour across the whole service: the cost ceiling | 全服務每小時可開始的調查數，費用天花板 |
+| `DAILY_INVESTIGATION_LIMIT` | `200` | Investigations per day across the whole service (day starts 00:00 Asia/Taipei, UTC+8); `0` = no limit. Past it the API returns 429 and the screen shows "Demo limit reached". The presenter is not counted, same as the hourly limits. The count is kept in memory: with min-instances=0 it goes back to 0 when the idle instance shuts down, so the hard ceiling is the Vertex AI quota set in GCP (see [deploy.md 5.1](docs/engineering/deploy.md)) | 全服務每日可開始的調查數（日界線為台北時間 00:00，UTC+8），`0`＝不限；超過時 API 回 429，畫面顯示「Demo limit reached」。簡報者不計入，和每小時上限相同。計數存在記憶體：min-instances=0 時實例閒置關閉就會歸零，硬上限要靠 GCP 端的 Vertex AI 配額（見 [deploy.md 5.1](docs/engineering/deploy.md)） |
 | `TRUSTED_PROXY_HOPS` | `1` | Which `X-Forwarded-For` entry is the client IP, counted from the right. Keep the default 1 on Cloud Run | 決定取 `X-Forwarded-For` 的哪一段當用戶端 IP（從右數），Cloud Run 用預設 1 |
 | `MAX_CONCURRENT_INVESTIGATIONS` | `3` | Public investigations running at the same time | 公開使用者同時進行的調查上限 |
 | `PRESENTER_KEY` | empty / 空（off / 關閉） | Presenter key (secret), see Presenter mode above | 簡報者金鑰（機密），見上方簡報者模式 |

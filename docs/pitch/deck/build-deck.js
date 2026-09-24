@@ -230,7 +230,7 @@ function numDot(s, n, x, y, color) {
   const frames = [
     ["01-overview.png", "03:00 — Line 2 stops."],
     ["02-investigating.png", "One click. No prompt."],
-    ["03-root-cause.png", "Every number traces back to BigQuery."],
+    ["03-root-cause.png", "Every number traces back to a source data row."],
     ["04-conclusion.png", "Root cause + confidence + what was ruled out."],
     ["05-before-after.png", "Before → after*"],
   ];
@@ -244,7 +244,7 @@ function numDot(s, n, x, y, color) {
   s.addText("Backup video: stored on the laptop, not streamed.", {
     x: M, y: 5.2, w: 8, h: 0.4, fontFace: BODY, fontSize: 14, color: C.muted, margin: 0, isTextBox: true,
   });
-  pending(s, "* before-time pending interviews; after-time pending measurement.");
+  pending(s, "* before-time pending interviews; after-time measured: median 12.6 s per investigation (gemini-2.5-flash, docs/qa/runs).");
   s.addNotes("Script Segments 2-5. Only shown if the live app fails.");
 }
 
@@ -276,7 +276,8 @@ function numDot(s, n, x, y, color) {
   box("Browser · Phone", "Supervisor screen, QR work order", M, 3.0, 2.8);
   box("Cloud Run", "UI + API · asia-southeast1", 4.3, 3.0, 2.8, C.amber);
   box("Vertex AI Gemini", "Function calling · 5 fixed queries · temp 0", 8.3, 1.85, 4.4, C.blue);
-  box("BigQuery", "Plant data · work orders", 8.3, 3.0, 4.4, C.blue);
+  // 9/24 meeting: demo data is DuckDB inside the Cloud Run image. BigQuery is only "swappable", never "supported".
+  box("DuckDB · demo data", "In the Cloud Run image · swappable for BigQuery", 8.3, 3.0, 4.4);
   box("Cloud Logging", "Every query replayable", 8.3, 4.15, 4.4, C.blue);
   // Line extents must be non-negative; an upward arrow is drawn with flipV.
   const arrow = (x1, y1, x2, y2) => s.addShape(pres.shapes.LINE, {
@@ -364,19 +365,19 @@ function numDot(s, n, x, y, color) {
   const s = pres.addSlide();
   s.background = { color: C.bg };
   s.addText([
-    { text: "40 min ", options: { color: C.text } },
+    { text: "Stoppage ", options: { color: C.text } },
     { text: "→ ", options: { color: C.amber } },
-    { text: "90 sec*", options: { color: C.text } },
-  ], { x: M, y: 1.7, w: W - 2 * M, h: 1.6, align: "center", fontFace: HEAD, fontSize: 80, bold: true, margin: 0, isTextBox: true });
+    { text: "root cause in ~12 s*", options: { color: C.text } },
+  ], { x: M, y: 1.7, w: W - 2 * M, h: 1.6, align: "center", fontFace: HEAD, fontSize: 50, bold: true, margin: 0, isTextBox: true });
   s.addText("Every conclusion backed by evidence.", {
     x: M, y: 3.35, w: W - 2 * M, h: 0.7, align: "center", fontFace: BODY, fontSize: 28, color: C.text2, margin: 0, isTextBox: true,
   });
-  card(s, 3.4, 4.6, 6.53, 1.3, C.s1);
+  card(s, 2.4, 4.6, 8.53, 1.3, C.s1);
   s.addText([
     { text: "Hung Che Nick Lai", options: { bold: true, color: C.text, breakLine: true } },
-    { text: "hongchelai@gmail.com  ·  Live prototype: [Cloud Run URL / QR]", options: { color: C.text2 } },
-  ], { x: 3.4, y: 4.6, w: 6.53, h: 1.3, align: "center", valign: "middle", fontFace: BODY, fontSize: 17, margin: 0, isTextBox: true });
-  s.addText("* 40 min pending interviews · 90 sec pending measurement", {
+    { text: "hongchelai@gmail.com  ·  Live prototype: linesleuth-547147056278.asia-southeast1.run.app", options: { color: C.text2 } },
+  ], { x: 2.4, y: 4.6, w: 8.53, h: 1.3, align: "center", valign: "middle", fontFace: BODY, fontSize: 17, margin: 0, isTextBox: true });
+  s.addText("* measured median 12.6 s per investigation (gemini-2.5-flash, 10 root causes × 3 runs, docs/qa/runs) · manual baseline pending interviews", {
     x: M, y: 6.8, w: W - 2 * M, h: 0.3, align: "center", fontFace: BODY, fontSize: 11, italic: true, color: C.amber, margin: 0, isTextBox: true,
   });
   s.addNotes("Script Segment 10. Stay on this slide during Q&A.");
@@ -386,9 +387,9 @@ function numDot(s, n, x, y, color) {
 {
   const s = base("Validation status", "Appendix");
   const rows = [
-    ["Regression set (10 known root causes, 3 distractors; bar ≥ 9/10, 3 runs each)", "[to measure] / 10"],
-    ["Healthy data returns “Insufficient evidence”", "[to measure]"],
-    ["Median time to conclusion", "[to measure] s"],
+    ["Regression set (10 known root causes, 3 distractors; bar ≥ 9/10, 3 runs each)", "10 / 10 (real Gemini)"],
+    ["Healthy data returns “Insufficient evidence”", "2 / 2"],
+    ["Median time to conclusion (gemini-2.5-flash, docs/qa/runs)", "12.6 s"],
     ["Plant-manager interviews completed", "[pending interviews]"],
   ];
   rows.forEach(([k, v], i) => {

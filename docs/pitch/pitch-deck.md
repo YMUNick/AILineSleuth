@@ -26,7 +26,7 @@
 | 8 | How we're different | 2:00–2:20 |
 | 9 | Business model | 2:20–2:35 |
 | 10 | Roadmap | 2:35–2:50 |
-| 11 | 40 min → 90 sec | 2:50–3:00 |
+| 11 | Stoppage → root cause in ~12 s | 2:50–3:00 |
 | A1 | Validation status | Appendix / Q&A |
 | A2 | Known limitations | Appendix / Q&A |
 
@@ -95,9 +95,9 @@
 - Fallback content: five screenshots, one per storyboard frame, each with its caption:
   1. `03:00 — Line 2 stops.`
   2. `One click. No prompt.`
-  3. `Every number traces back to BigQuery.`
+  3. `Every number traces back to a source data row.` (demo data is DuckDB, swappable for BigQuery; never say BigQuery is supported)
   4. `Root cause + confidence + what was ruled out.`
-  5. `40 min → 90 sec` with `*pending validation` until verified
+  5. `Before → after*`, footnote: before-time pending interviews; after-time measured median 12.6 s per investigation (gemini-2.5-flash, `docs/qa/runs/README.md`)
 
 **Suggested visual**: screenshot strip; a small link or QR to the backup video.
 
@@ -126,14 +126,14 @@
 
 **Key points**
 - **Cloud Run**: one service for UI and API, Singapore region (`asia-southeast1`)
-- **BigQuery**: plant data and the work order table
+- **DuckDB** (demo data, inside the Cloud Run image): plant data and the work order table; the data layer can be swapped for BigQuery (not "supported" yet)
 - **Vertex AI Gemini**: function calling over 5 fixed queries, temperature 0
 - **Cloud Logging**: every query and parameter is logged for replay
 - **IAM**: least-privilege service account, no API keys in code
 - **Secret Manager**: holds the presenter key (`PRESENTER_KEY`); show it only if the key is actually stored there at submission (`docs/engineering/deploy.md` §4)
 - **Budget alerts** at 50 / 90 / 100%, plus a per-IP rate limit and a service-wide hourly cap
 
-**Suggested visual**: simple architecture diagram: Browser / Phone → Cloud Run → (Vertex AI Gemini, BigQuery) → Cloud Logging. Use official Google Cloud product icons.
+**Suggested visual**: simple architecture diagram: Browser / Phone → Cloud Run → (Vertex AI Gemini, DuckDB demo data "swappable for BigQuery") → Cloud Logging. Use official Google Cloud product icons.
 
 **Speaker notes**: in the live pitch these words are spoken during Segment 3. Model name on the slide only after it is verified in Model Garden (`GEMINI_MODEL`); otherwise just say "Gemini".
 
@@ -187,10 +187,11 @@
 
 ---
 
-## Slide 11: 40 min → 90 sec
+## Slide 11: Stoppage → root cause in ~12 s
 
 **Key points**
-- `40 min → 90 sec` (both `*pending validation` until interview and measurement results are in: `[待訪談驗證]`, `[待實測]`)
+- `Stoppage → root cause in ~12 s*`, footnote: measured median 12.6 s per investigation (gemini-2.5-flash, 10 root causes × 3 runs, `docs/qa/runs/README.md`); manual baseline pending interviews
+- 40 min stays off the headline: footnote only, marked `[待訪談驗證]`; drop it entirely if there are still 0 interviews on 10/1
 - `Every conclusion backed by evidence.`
 - Ask: "We're looking for design-partner factories in Southeast Asia and Taiwan."
 - Contact / QR to the live prototype
@@ -206,7 +207,7 @@
 **Key points**
 - Regression set: 10 known root causes, including 3 distractors; pass bar ≥ 9/10, each run 3 times. Result: `[待實測]` / 10
 - Healthy-data tests return "Insufficient evidence": `[待實測]`
-- Median time to conclusion: `[待實測]` s
+- Median time to conclusion: 12.6 s (gemini-2.5-flash, full set × 3, `docs/qa/runs/README.md`)
 - Plant manager interviews: `[待訪談驗證]` completed
 
 **Suggested visual**: simple scorecard, green / grey ticks.

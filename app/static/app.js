@@ -40,7 +40,7 @@ const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 async function api(path, opts = {}) {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+  if (!res.ok) throw Object.assign(new Error(body.detail || `HTTP ${res.status}`), { status: res.status });
   return body;
 }
 
@@ -224,7 +224,8 @@ async function investigate() {
     render(inv);
     if (inv.status === "running") state.poll = setInterval(pollOnce, 700);
   } catch (e) {
-    showFailure(e.message);
+    if (e.status === 429) showLimit(e.message);   // daily / hourly limit: a plain notice, not a failure
+    else showFailure(e.message);
   }
 }
 function stopPolling() { if (state.poll) clearInterval(state.poll); state.poll = null; }
@@ -468,6 +469,17 @@ function showFailure(msg) {
   $("result").replaceChildren(el("div", { class: "fail" }, el("p", {}, "Investigation failed. Press Reset and try again."),
     el("p", { class: "meta" }, msg || "")));
   if (state.inv) { collapseForResult(); showEvidenceHead(state.inv); }
+}
+
+function showLimit(msg) {                                   // HTTP 429 from DAILY_INVESTIGATION_LIMIT or the hourly limits
+  stopPolling();
+  if (state.scenario) { mapCleared(); setButton("idle"); }
+  setChip("Demo limit reached", "chip-muted");
+  $("elapsed").classList.add("hidden");
+  $("result").replaceChildren(el("div", { class: "grey limit", role: "status" },
+    el("div", { class: "grey-head" }, el("div", { class: "grey-icon", "aria-hidden": "true" }, "i"), el("h3", {}, "Demo limit reached")),
+    el("p", {}, msg || "This public demo has reached its usage limit. Please try again later."),
+    el("p", { class: "meta" }, "The limit keeps this free demo running. Nothing is wrong with the line or your browser.")));
 }
 
 // ------------------------------------------------------------------ evidence charts (ui-v2-spec 1.4-1.7)

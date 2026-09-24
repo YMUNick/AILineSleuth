@@ -60,7 +60,7 @@
 ### Q3. Why wouldn't a factory just use Google's Manufacturing Data Engine?
 
 **Answer**
-> MDE is the right destination once a factory has connected machines and wants a full data platform. Most of our customers aren't there yet. LineSleuth runs on the same Google Cloud stack: BigQuery, Vertex AI, Cloud Run. So a customer who starts with us is already on the path to MDE. We see it as the platform they grow into, not a competitor.
+> MDE is the right destination once a factory has connected machines and wants a full data platform. Most of our customers aren't there yet. LineSleuth runs on the same Google Cloud stack: Vertex AI and Cloud Run, with a data layer that can be swapped for BigQuery. So a customer who starts with us is already on the path to MDE. We see it as the platform they grow into, not a competitor.
 
 **Notes**: judges may be Googlers. Never position MDE as weaker. `[待查證]` MDE's current scope before use.
 
@@ -96,9 +96,9 @@
 ### Q7. How do you stop Gemini from hallucinating a root cause?
 
 **Answer**
-> Four layers. One: Gemini never writes SQL; it can only call five fixed queries, and parameters are checked against a whitelist. Two: the numbers on each card are computed by our code from source rows, and you can open those rows. Three: a root cause must cite at least two evidence cards, and the confidence label is calculated by our server, not chosen by the model. Four: if the evidence isn't there, it says "Insufficient evidence". We test this with a regression set of 10 known root causes, including 3 distractors, and require at least 9 out of 10 before deploying.
+> Four layers. One: Gemini never writes SQL; it can only call five fixed queries, and parameters are checked against a whitelist. Two: the numbers on each card are computed by our code from source rows, and you can open those rows. Three: a root cause must cite at least two evidence cards, and the confidence label is calculated by our server, not chosen by the model. Four: if the evidence isn't there, it says "Insufficient evidence". We test this with a regression set of 10 known root causes, including 3 distractors, and require at least 9 out of 10 before deploying. On real Gemini it scored 10 out of 10, three runs each, in about 12 seconds per investigation.
 
-**Notes**: say the actual regression score only when measured: `[待實測]` / 10. Server-side rules are in `app/agent/conclusion.py`.
+**Notes**: measured 2026-09-24: 10/10 root causes, 2/2 insufficient evidence, median 12.6 s (gemini-2.5-flash, `docs/qa/runs/README.md`). Update if Quinn's 10/8 Cloud Run run differs. Server-side rules are in `app/agent/conclusion.py`.
 
 ### Q8. What happens if the root cause is wrong?
 
@@ -135,9 +135,9 @@
 ### Q12. Is the demo scripted?
 
 **Answer**
-> No. The dataset is fixed and simulated, but every time we press Investigate, Gemini chooses the queries live, the queries run live on BigQuery, and each call is logged in Cloud Logging with its query ID. You can see the query ID under the source rows. We do keep a recorded backup video in case the venue network fails.
+> No. The dataset is fixed and simulated, but every time we press Investigate, Gemini chooses the queries live, the queries run live on the demo database, and each call is logged in Cloud Logging with its query ID. You can see the query ID under the source rows. We do keep a recorded backup video in case the venue network fails.
 
-**Notes**: only true in `gemini` mode. Confirm there is no OFFLINE FIXTURE bar before going on stage.
+**Notes**: only true in `gemini` mode. The demo database is DuckDB inside the Cloud Run image; if asked, say "the data layer can be swapped for BigQuery", never "runs on BigQuery". Confirm there is no OFFLINE FIXTURE bar before going on stage.
 
 ### Q13. Aren't five fixed queries too limiting?
 
@@ -172,7 +172,7 @@
 ### Q17. What does one investigation cost you?
 
 **Answer**
-> We're measuring it now. Each investigation is a handful of Gemini calls plus very small BigQuery queries. We've set budget alerts from day one, a per-IP limit, and a service-wide hourly cap on investigations, so the worst case per hour is bounded. We're adding token logging so every investigation's cost is visible.
+> We're measuring it now. Each investigation is a handful of Gemini calls plus very small database queries. We've set budget alerts from day one, a per-IP limit, and a service-wide hourly cap on investigations, so the worst case per hour is bounded. We're adding token logging so every investigation's cost is visible.
 
 **Notes**: the cost per investigation is `待估算` (ENH-002 adds token logging). Do not guess a number. The service-wide cap is `GLOBAL_RATE_LIMIT_PER_HOUR` (default 60, Felix sets the final value); the per-IP limit is `RATE_LIMIT_PER_HOUR`. Say "cannot be bypassed" only after Quinn's forged-header test on Cloud Run passes (BUG-003, `deploy.md` 5.1) `[待實測]`.
 
@@ -199,7 +199,7 @@
 ### Q20. Why Google Cloud and Gemini?
 
 **Answer**
-> Four reasons. Gemini's function calling lets us restrict the model to our tested queries. BigQuery is serverless, so small factories don't need a database team. Cloud Run keeps the whole app as one small service, deployed in Singapore close to our customers. And Google Cloud gives our customers a growth path to the Manufacturing Data Engine later.
+> Four reasons. Gemini's function calling lets us restrict the model to our tested queries. The demo data sits in DuckDB inside the service, and the data layer can be swapped for BigQuery, which is serverless, so small factories won't need a database team. Cloud Run keeps the whole app as one small service, deployed in Singapore close to our customers. And Google Cloud gives our customers a growth path to the Manufacturing Data Engine later.
 
 **Notes**: if asked about the exact Gemini model, answer with the verified `GEMINI_MODEL` value only.
 

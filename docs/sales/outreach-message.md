@@ -43,6 +43,39 @@
 > Thanks!
 > [Your name] | [Contact]
 
+## 升級版：附 demo 網址（2026-09-24 會議後新增）
+
+- 草稿，老闆修改後自行寄送；可當第一封，也可當跟進訊息。
+- 目的：讓對方先看 30 秒，再回答「你們現在要多久」，這個回答就是「40 分鐘」`[待訪談驗證]` 的第一手證據。記下對方原話與可否引用。
+- Demo 是模擬資料、免登入；網址用手機也能開。實測約 12 秒找到根因（中位數 12.6 秒，出處 `docs/qa/runs/README.md`）。Cloud Run 閒置時第一次開可能要多等幾秒。
+- 不要寫「支援 BigQuery」、不要寫 40 分鐘，讓對方自己講數字。
+
+**中文版**
+
+> [稱呼]您好，我是[老闆名字]，[一句自我介紹／怎麼找到您]。
+>
+> 我做了一個給中小代工廠夜班主管用的停線調查工具：按一個鈕，它就從產線資料找證據、推出根因、開出工單，每個結論都能回查原始資料。
+>
+> 想請您花 30 秒看它查一次停線，再告訴我你們現在要多久：
+> https://linesleuth-547147056278.asia-southeast1.run.app
+> （模擬資料、免登入，按 Investigate 即可，手機也能開）
+>
+> 如果願意，再給我 20 分鐘聊聊您工廠停線後怎麼找原因。不推銷，工廠名稱不會公開。10/1 前哪個時段方便？謝謝！
+> [老闆名字]｜[聯絡方式]
+
+**English**
+
+> Hi [Name], I'm [Your name], [one-line intro / how I found you].
+>
+> I've built a line-stoppage investigation tool for night-shift supervisors at small contract manufacturers: one button, and it pulls evidence from plant data, finds the root cause and opens a work order, with every conclusion traceable to its source rows.
+>
+> Could you spend 30 seconds watching it investigate one stoppage, then tell me how long it takes your team today?
+> https://linesleuth-547147056278.asia-southeast1.run.app
+> (Simulated data, no sign-up. Just press Investigate. Works on a phone.)
+>
+> If you're open to it, I'd love 20 minutes before Oct 1 to hear how your plant handles stoppages. No sales pitch, and your company name won't be made public. Thanks!
+> [Your name] | [Contact]
+
 ## 跟進（3 天沒回）
 
 > 中文：[稱呼]您好，再打擾一次。若這週不方便，下週 10 分鐘也很有幫助；或您是否能推薦一位適合聊的產線主管？謝謝！

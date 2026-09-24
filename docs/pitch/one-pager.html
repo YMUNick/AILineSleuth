@@ -19,7 +19,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; background: #ffffff; color: var(--ink);
     font-family: "Inter", "Segoe UI", Arial, "Microsoft JhengHei", sans-serif; }
-  .page { width: 210mm; height: 297mm; padding: 13mm 14mm 11mm; display: flex; flex-direction: column; gap: 4.2mm; overflow: hidden; }
+  .page { width: 210mm; height: 297mm; padding: 11mm 14mm 9mm; display: flex; flex-direction: column; gap: 3.2mm; overflow: hidden; }
   header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--ink); padding-bottom: 3mm; }
   .brand { font-size: 27pt; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
   .brand span { color: var(--amber); }
@@ -75,13 +75,13 @@
 
   <section>
     <h2>Solution</h2>
-    <p>One <b>Investigate</b> button, no chat box. Gemini calls five fixed, tested BigQuery queries and never writes SQL. Every step becomes an evidence card that opens to its source rows. No evidence, no conclusion: it answers <b>“Insufficient evidence”</b> instead of guessing.</p>
+    <p>One <b>Investigate</b> button, no chat box. Gemini calls five fixed, tested queries and never writes SQL (demo data on DuckDB, swappable for BigQuery). Every step becomes an evidence card that opens to its source rows. No evidence, no conclusion: it answers <b>“Insufficient evidence”</b> instead of guessing.</p>
     <div class="demo">
       <div class="step"><b><span class="n">1</span>Alarm</b><p>03:00, Line 2 turns red; the supervisor presses Investigate.</p></div>
-      <div class="step"><b><span class="n">2</span>Evidence</b><p>Cards appear one by one (temperature, coolant flow, valve, shift log), each tracing back to BigQuery rows.</p></div>
+      <div class="step"><b><span class="n">2</span>Evidence</b><p>Cards appear one by one (temperature, coolant flow, valve, shift log), each tracing back to source data rows.</p></div>
       <div class="step"><b><span class="n">3</span>Action</b><p>Root cause “cooling valve CV-2 stuck” with a server-scored confidence label; one click creates a work order, opened on a phone by QR.</p></div>
     </div>
-    <div class="zh">Gemini 只能選固定查詢，數字可回查原始列，證據不足就出灰卡。Demo 目標 90 秒 [to measure]。</div>
+    <div class="zh">Gemini 只能選固定查詢，數字可回查原始列，證據不足就出灰卡。實測約 12 秒找到根因（中位數 12.6 秒，gemini-2.5-flash，docs/qa/runs）。</div>
   </section>
 
   <div class="grid">
@@ -122,7 +122,7 @@
       <h2>Built on Google Cloud</h2>
       <div class="chips">
         <span class="chip"><b>Cloud Run</b> · Singapore</span>
-        <span class="chip"><b>BigQuery</b> · plant data</span>
+        <span class="chip"><b>DuckDB</b> · demo data, swappable for BigQuery</span>
         <span class="chip"><b>Vertex AI Gemini</b> · function calling</span>
         <span class="chip"><b>Cloud Logging</b> · replayable</span>
         <span class="chip"><b>IAM</b> · least privilege</span>
@@ -133,7 +133,8 @@
       <h2>Traction and validation</h2>
       <ul>
         <li>Prototype on simulated data: one stoppage and one healthy-data scenario</li>
-        <li>Regression set: 10 known root causes; score <span class="pending">[to measure]</span> / 10 (bar 9/10)</li>
+        <li>Regression set: 10 known root causes; score 10/10 on real Gemini, 3 runs each (bar 9/10)</li>
+        <li>Time to root cause: ~12 s (measured median 12.6 s, docs/qa/runs)</li>
         <li>Plant-manager interviews: <span class="pending">[pending interviews]</span></li>
       </ul>
     </section>
@@ -141,12 +142,12 @@
 
   <section>
     <h2>Team and contact</h2>
-    <p>Hung Che Nick Lai · hongchelai@gmail.com · Live prototype: <span class="pending">[Cloud Run URL / QR]</span></p>
+    <p>Hung Che Nick Lai · hongchelai@gmail.com · Live prototype: https://linesleuth-547147056278.asia-southeast1.run.app</p>
   </section>
 
   <footer>
-    <div class="big">40 min <span>→</span> 90 sec</div>
-    <div class="small">Every conclusion backed by evidence.<br>40 min [pending interviews] · 90 sec [to measure]</div>
+    <div class="big">Stoppage <span>→</span> root cause in ~12 s</div>
+    <div class="small">Every conclusion backed by evidence.<br>Measured median 12.6 s, gemini-2.5-flash (docs/qa/runs)</div>
   </footer>
 
 </div>

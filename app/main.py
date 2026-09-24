@@ -14,6 +14,7 @@ import sys
 import threading
 import time
 from collections import defaultdict, deque
+from datetime import datetime, timedelta, timezone
 
 import segno
 from fastapi import FastAPI, HTTPException, Request
@@ -42,7 +43,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 WO_ID = re.compile(r"^WO-\d{4,6}$")
 
 
-# ---------------------------------------------------------------- rate limit (per IP + whole service, per hour)
+# ---------------------------------------------------------------- rate limit (per IP + whole service, per hour; + per day below)
 _hits: dict[str, deque] = defaultdict(deque)
 GLOBAL_KEY = "(all clients)"  # not an IP; holds every counted start for GLOBAL_RATE_LIMIT_PER_HOUR
 
@@ -70,8 +71,32 @@ def _window(key: str, now: float) -> deque:
     return q
 
 
+# ---------------------------------------------------------------- daily limit (whole service, per calendar day)
+# Day boundary = 00:00 Asia/Taipei. Taiwan has no daylight saving, so a fixed UTC+8 offset is exact and needs no
+# tzdata package. The count lives in this process only: with min-instances=0 an idle instance shuts down and the
+# count starts again at 0, so the hard ceiling is the Vertex AI quota set in GCP (docs/engineering/deploy.md 5.1).
+DAY_TZ = timezone(timedelta(hours=8), "Asia/Taipei")
+_daily = {"day": None, "count": 0}
+
+
+def _today() -> str:
+    return datetime.now(DAY_TZ).date().isoformat()
+
+
+def _daily_count() -> int:
+    day = _today()
+    if _daily["day"] != day:
+        _daily["day"], _daily["count"] = day, 0
+    return _daily["count"]
+
+
 def _check_rate(ip: str) -> None:
     now = time.time()
+    limit = settings.daily_investigation_limit
+    if limit > 0 and _daily_count() >= limit:
+        raise HTTPException(429, f"Today's demo limit of {limit} investigations has been reached. "
+                                 "It resets at 00:00 Taipei time (UTC+8). Please come back tomorrow.",
+                            headers={"X-Limit": "daily"})
     if len(_window(ip, now)) >= settings.rate_limit_per_hour:
         raise HTTPException(429, "Rate limit reached. Try again later.")
     if len(_window(GLOBAL_KEY, now)) >= settings.global_rate_limit_per_hour:
@@ -82,6 +107,8 @@ def _record_hit(ip: str) -> None:
     now = time.time()
     _hits[ip].append(now)
     _hits[GLOBAL_KEY].append(now)
+    _daily_count()  # rolls the day over first
+    _daily["count"] += 1
 
 
 _rate_lock = threading.Lock()

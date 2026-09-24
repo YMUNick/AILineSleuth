@@ -66,9 +66,9 @@ Do not read the markers aloud. They exist so nobody presents an unverified numbe
 **Screen**: live app, storyboard frame ③. Cards appear one by one. Around 0:50 open `View source rows` on the coolant flow card for about 3 seconds, then `Hide source rows`.
 
 > Gemini doesn't write SQL. It picks from five fixed, tested queries, and every step becomes an evidence card.
-> It all runs on Google Cloud: one Cloud Run service, plant data in BigQuery, Gemini on Vertex AI with function calling, and every query logged in Cloud Logging.
+> It all runs on Google Cloud: one Cloud Run service, Gemini on Vertex AI with function calling, and every query logged in Cloud Logging. The demo data sits in DuckDB inside the service, and the data layer can be swapped for BigQuery.
 > The alarm fired at 3:00. Mold temperature went past the SOP limit. Coolant flow dropped to about 41 percent. Valve CV-2 has been stuck at 20 percent since 2:41.
-> *(open source rows)* And every number traces back to the raw rows in BigQuery. Right here.
+> *(open source rows)* And every number traces back to the raw source rows. Right here.
 > It also checked the 2:30 shift handover.
 
 **Notes**
@@ -94,7 +94,8 @@ Do not read the markers aloud. They exist so nobody presents an unverified numbe
 > One click creates the work order. Scan it, and the technician has it on their phone, with the evidence attached. Look at the clock: *(read `Elapsed`)* seconds from alarm to work order.
 
 **Notes**
-- Say the real `Elapsed` number. Do not say "90 seconds" here unless the screen shows it.
+- Say the real `Elapsed` number. Our measured median is 12.6 s per investigation (gemini-2.5-flash, `docs/qa/runs/README.md`); never quote a number the screen does not show.
+- Never say "BigQuery is supported": the demo runs on DuckDB, and BigQuery is only "swappable".
 - BUG-004 is fixed: with presenter mode on (manual 3.8), judges using the main page cannot cancel or block the big screen. Until Quinn verifies this on Cloud Run `[待實測]`, still ask judges to stay on the work order page (see manual 7.4).
 - If the QR does not open: point to the short URL under the QR code, or show the driver's phone.
 
@@ -136,11 +137,13 @@ Do not read the markers aloud. They exist so nobody presents an unverified numbe
 
 ## 10. Closing (2:50–3:00, 10 s)
 
-**Screen**: Slide 11, caption card `40 min → 90 sec` / `Every conclusion backed by evidence.`
+**Screen**: Slide 11, caption card `Stoppage → root cause in ~12 s` / `Every conclusion backed by evidence.`
 
-> Forty minutes `[待訪談驗證]` down to ninety seconds `[待實測]`, and every conclusion comes with its evidence. We're LineSleuth. Thank you.
+> From line stoppage to root cause in about twelve seconds, measured, and every conclusion comes with its evidence. We're LineSleuth. Thank you.
 
-**Fallback**: if either number is still unverified, say "From forty minutes of digging to one button, and every conclusion comes with its evidence."
+**Notes**
+- "About twelve seconds" = measured median 12.6 s per investigation (gemini-2.5-flash, 10 root causes × 3 runs, `docs/qa/runs/README.md`).
+- Only if interviews have validated the manual baseline, you may add before it: "Today that takes about forty minutes `[待訪談驗證]`." If there are still 0 interviews on 10/1, never say forty minutes.
 
 ---
 
