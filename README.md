@@ -13,6 +13,24 @@
 
 **繁體中文**：參賽：AI Builder Cup 2026（製造業主題），目標 10/17 繳交。標 `[待訪談驗證]`、`[待實測]` 的數字是目標值，尚未驗證。
 
+## Demo / 畫面示意
+
+**English**: Live prototype: https://linesleuth-547147056278.asia-southeast1.run.app (Cloud Run, real Gemini `gemini-2.5-flash`, simulated plant data). The screenshots below were captured from that deployment at 1920×1080.
+
+**繁體中文**：線上原型：https://linesleuth-547147056278.asia-southeast1.run.app （Cloud Run、真 Gemini `gemini-2.5-flash`、模擬工廠資料）。以下截圖都是從這個部署以 1920×1080 拍的。
+
+| ① Alarm / 停線警報 | ② Evidence → root cause / 證據與根因 |
+|---|---|
+| <img src="docs/pitch/deck/assets/01-overview.png" width="420" alt="Plant map at 03:00 with Line 2 M3 stopped and the Investigate button"> | <img src="docs/pitch/deck/assets/03-root-cause.png" width="420" alt="Plant map zoomed to L2-M3 with CV-2 valve highlighted as root cause; evidence cards with sparklines"> |
+| **EN**: 03:00, Line 2 M3 stops. One button, no prompt: press **Investigate**.<br>**中文**：凌晨 3 點 Line 2 M3 停線，不用打字，按 **Investigate** 就好。 | **EN**: Gemini calls fixed queries; each evidence card has a sparkline and opens to its source rows. The map zooms in and highlights valve CV-2 as the root cause.<br>**中文**：Gemini 只能呼叫固定查詢，每張證據卡附小圖、可回查原始資料；產線圖拉近並標出根因 CV-2 閥門。 |
+| ③ Work order by QR / 工單與 QR | ④ No evidence, no conclusion / 證據不足就不下結論 |
+| <img src="docs/pitch/deck/assets/06-wo-modal.png" width="420" alt="Work order created dialog with QR code"> | <img src="docs/pitch/deck/assets/07-insufficient.png" width="420" alt="Insufficient evidence grey card listing everything that was checked"> |
+| **EN**: One click creates a work order; the technician scans the QR code to open it on a phone.<br>**中文**：一鍵建立工單，技術員用手機掃 QR 就能打開。 | **EN**: On healthy data it answers "Insufficient evidence", lists what it checked and hands the decision back to a human.<br>**中文**：資料正常時回「證據不足」，列出查過的項目，把判斷交還給人。 |
+
+<img src="docs/pitch/deck/assets/06-work-order-phone.png" width="220" alt="Work order page on a phone"> 
+
+**EN**: The work order as it opens on a phone. **中文**：手機打開的工單頁。
+
 ## Documentation index / 文件索引
 
 | Area / 領域 | Documents / 文件 | English | 繁體中文 | Doc language / 文件語言 |
