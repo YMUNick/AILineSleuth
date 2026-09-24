@@ -92,7 +92,7 @@ Quinn 的 `docs/qa/test-plan.md` 可以直接引用這張表；要改題目改 `
 ## 6. Agent 與結論規則
 
 - Gemini：`google-genai` SDK，`vertexai=True`，自動 function calling 關閉（我們自己執行每一步），`mode=ANY` 讓模型每輪都必須呼叫函式，最後用 `submit_conclusion` 交卷；查詢超過 8 次就只允許 `submit_conclusion`。
-- 預設模型 `gemini-3-flash-preview`、location `global`。**這個名字是我依知識截止時的最新版本填的，沒有實際呼叫驗證過**；上線前老闆要在 Vertex AI Model Garden 確認可用的最新 ID 後寫進 `GEMINI_MODEL`。
+- 預設模型 `gemini-2.5-flash`、location `global`。2026-09-24 在 `ailinesleuth-2026` 實測：R01／N01 各 10 次全對，每次調查中位數約 11 秒，0 次 429。`gemini-3.8-flash` 一樣準，但新試用專案額度小，常遇到 429／逾時（中位數 45–136 秒），列為備案。
 - 注意：Google 對 Gemini 3 建議 temperature 用預設 1.0，設 0 可能出現重複迴圈或品質下降。會議定案是 0，所以預設 0；回歸集若出現卡迴圈，再拿 `GEMINI_TEMPERATURE` 做對照實驗。
 - 結論規則（`app/agent/conclusion.py`）：引用有效證據卡 < 2 張 → 一律改灰卡；被引用的卡**全部是正常**（沒有任何異常訊號）→ 也改灰卡（BUG-001）；模型輸出型別不對（例如字串代替陣列）當成缺欄位（BUG-006）；信心標籤由伺服器算（**暫定**：引用卡中有異常訊號 ≥3 張 High、2 張 Medium、其餘 Low，等 PRD Q4 定案再改）。
 - Prompt injection：日誌文字在 system prompt 明講是不可信資料；R07 內含攻擊字串，回歸集會驗證。

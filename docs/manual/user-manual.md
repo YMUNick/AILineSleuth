@@ -116,7 +116,7 @@ Set `QUERY_BACKEND` in `.env`.
 |---|---|---|
 | `AGENT_MODE` | `gemini` | See 3.3 |
 | `QUERY_BACKEND` | `local` | See 3.4 |
-| `GEMINI_MODEL` | `gemini-3-flash-preview` | Model ID. **Not yet verified**: confirm the current ID in Vertex AI Model Garden before the demo. |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Model ID. Verified 2026-09-24 (R01/N01 ×10, ~11 s each). Fallback: `gemini-3.8-flash` (accurate but rate-limited on a new project). |
 | `STEP_TIMEOUT_S` | `20` | A query slower than this falls back to the last verified result (`Cached`) or fails |
 | `GEMINI_MAX_RETRIES` | `2` | How many times a Gemini call that timed out, hit 429 or a 5xx error is retried, **per investigation in total** (0-5). After that the investigation ends as `Investigation failed`; it never retries forever. |
 | `GEMINI_RETRY_BACKOFF_S` | `2` | Wait before the first retry, doubled for each next one (2 s, 4 s) |

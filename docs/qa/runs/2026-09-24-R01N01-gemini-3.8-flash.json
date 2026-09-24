@@ -1,0 +1,3149 @@
+[
+ {
+  "scenario": "R01",
+  "run": 1,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "end": "03:00",
+     "line": 2,
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "sensor": "mold_temp_c",
+     "line": 2,
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "line": 2,
+     "sensor": "cv_position_pct",
+     "end": "03:00",
+     "machine": "M3"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "coolant_flow_lpm",
+     "end": "03:00",
+     "start": "02:30",
+     "machine": "M3",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "end": "03:00",
+     "sensor": "heater_power_pct",
+     "machine": "M3",
+     "line": 2,
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "end": "03:00",
+     "machine": "M3",
+     "line": 2,
+     "start": "02:30",
+     "sensor": "mold_temp_ref_c"
+    }
+   ]
+  ],
+  "elapsed_s": 35.6,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Heater power",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "4 independent signals agree · 3 alternatives ruled out",
+   "cited_evidence": [
+    1,
+    3,
+    4,
+    5
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover at 02:30 involved no parameter changes and did not cause the incident."
+    },
+    {
+     "evidence_id": 6,
+     "text": "Heater power reduced from 55% to 30%, ruling out heater stuck on per SOP 4.2."
+    },
+    {
+     "evidence_id": 7,
+     "text": "Reference mold temperature sensor closely tracked control temperature, ruling out sensor drift per SOP 4.7."
+    }
+   ],
+   "evidence_lines": [
+    "Alarm events: Over-temperature — M3 alarm at 03:00:12 · line stopped · 2 alarms in window",
+    "Mold temperature: 213.6 °C — Above SOP 4.2 limit of 205 °C since 02:54",
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41"
+   ],
+   "recommended_actions": [
+    "Open cooling valve CV-2 manually per SOP 4.2.",
+    "Inspect the CV-2 valve actuator and mechanical linkage per SOP 4.1.",
+    "Restart Line 2 only after mold temperature drops below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1, SOP 4.2",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 1,
+   "input_tokens": 16918,
+   "output_tokens": 598,
+   "thinking_tokens": 2211,
+   "cached_tokens": 0,
+   "total_tokens": 19727,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 2,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "line": 2,
+     "end": "03:05",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "line": 2,
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "end": "03:00",
+     "start": "02:30",
+     "line": 2,
+     "sensor": "mold_temp_c"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "line": 2,
+     "sensor": "mold_temp_ref_c",
+     "end": "03:00",
+     "machine": "M3"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "cv_position_pct",
+     "start": "02:30",
+     "machine": "M3",
+     "end": "03:00",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "start": "02:30",
+     "sensor": "coolant_flow_lpm",
+     "end": "03:00",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00",
+     "line": 2,
+     "sensor": "coolant_inlet_temp_c"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00",
+     "sensor": "heater_power_pct",
+     "line": 2
+    }
+   ]
+  ],
+  "elapsed_s": 24.8,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Coolant inlet temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Heater power",
+     "result": "within normal range"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "Medium",
+   "confidence_reason": "2 independent signals agree · 1 alternative ruled out",
+   "cited_evidence": [
+    5,
+    6
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover at 02:30 logged no parameter changes or open issues, and valve command remained unchanged at 80%."
+    }
+   ],
+   "evidence_lines": [
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41"
+   ],
+   "recommended_actions": [
+    "Manually open cooling valve CV-2 per SOP 4.2.",
+    "Inspect and service the CV-2 valve actuator per SOP 4.1.",
+    "Confirm coolant flow returns to 34–50 L/min and restart Line 2 only after mold temperature falls below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1 — Mold cooling circuit",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 3,
+   "retries": 0,
+   "input_tokens": 11998,
+   "output_tokens": 599,
+   "thinking_tokens": 2511,
+   "cached_tokens": 0,
+   "total_tokens": 15108,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 3,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "end": "03:05",
+     "start": "02:30",
+     "line": 2
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "line": 2,
+     "start": "02:30",
+     "end": "03:05"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "mold_temp_c",
+     "line": 2,
+     "start": "02:30",
+     "end": "03:00",
+     "machine": "M3"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "machine": "M3",
+     "end": "03:00",
+     "start": "02:30",
+     "sensor": "mold_temp_ref_c"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "end": "03:00",
+     "sensor": "cv_position_pct",
+     "start": "02:30",
+     "machine": "M3"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "coolant_flow_lpm",
+     "machine": "M3",
+     "line": 2,
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "sensor": "coolant_inlet_temp_c",
+     "end": "03:00",
+     "machine": "M3",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "line": 2,
+     "sensor": "heater_power_pct",
+     "machine": "M3",
+     "end": "03:00"
+    }
+   ]
+  ],
+  "elapsed_s": 38.6,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Coolant inlet temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Heater power",
+     "result": "within normal range"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "4 independent signals agree · 4 alternatives ruled out",
+   "cited_evidence": [
+    1,
+    3,
+    5,
+    6
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover recorded no parameter changes; data shows mechanical valve failure rather than operator action."
+    },
+    {
+     "evidence_id": 4,
+     "text": "Mold temperature reference probe tracks control probe closely, ruling out sensor drift per SOP 4.7."
+    },
+    {
+     "evidence_id": 7,
+     "text": "Coolant inlet temperature stayed normal (17.5–18.5 °C), ruling out chiller supply failure per SOP 4.1."
+    },
+    {
+     "evidence_id": 8,
+     "text": "Heater power modulated down normally, ruling out heater stuck on per SOP 4.2."
+    }
+   ],
+   "evidence_lines": [
+    "Alarm events: Over-temperature — M3 alarm at 03:00:12 · line stopped · 2 alarms in window",
+    "Mold temperature: 213.6 °C — Above SOP 4.2 limit of 205 °C since 02:54",
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41"
+   ],
+   "recommended_actions": [
+    "Manually open cooling valve CV-2 per SOP 4.2.",
+    "Inspect CV-2 valve actuator for mechanical or electrical failure per SOP 4.1 and SOP 4.2.",
+    "Restart Line 2 only after mold temperature drops below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1, SOP 4.2",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 3,
+   "retries": 0,
+   "input_tokens": 12437,
+   "output_tokens": 695,
+   "thinking_tokens": 2675,
+   "cached_tokens": 0,
+   "total_tokens": 15807,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 4,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "line": 2,
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "line": 2,
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "machine": "M3",
+     "sensor": "mold_temp_c",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "cv_position_pct",
+     "start": "02:30",
+     "end": "03:00",
+     "machine": "M3",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "coolant_flow_lpm",
+     "line": 2,
+     "end": "03:00",
+     "machine": "M3",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "end": "03:00",
+     "sensor": "heater_power_pct",
+     "start": "02:30",
+     "machine": "M3",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "sensor": "mold_temp_ref_c",
+     "machine": "M3",
+     "end": "03:00",
+     "line": 2
+    }
+   ]
+  ],
+  "elapsed_s": 53.0,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Heater power",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "5 independent signals agree · 2 alternatives ruled out",
+   "cited_evidence": [
+    1,
+    3,
+    4,
+    5,
+    7
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover at 02:30 recorded no parameter changes or component interventions."
+    },
+    {
+     "evidence_id": 6,
+     "text": "Heater power decreased from 55% to 30% as temperature rose, ruling out a stuck heater per SOP 4.2."
+    }
+   ],
+   "evidence_lines": [
+    "Alarm events: Over-temperature — M3 alarm at 03:00:12 · line stopped · 2 alarms in window",
+    "Mold temperature: 213.6 °C — Above SOP 4.2 limit of 205 °C since 02:54",
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41",
+    "Mold temperature (reference probe): 213.2 °C — Above SOP 4.7 limit of 205 °C since 02:54"
+   ],
+   "recommended_actions": [
+    "Manually open cooling valve CV-2 to restore coolant flow per SOP 4.2.",
+    "Inspect and repair or replace the CV-2 valve actuator per SOP 4.1.",
+    "Restart Line 2 only after mold temperature drops below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.2 — Mold over-temperature",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 0,
+   "input_tokens": 17134,
+   "output_tokens": 610,
+   "thinking_tokens": 2033,
+   "cached_tokens": 3070,
+   "total_tokens": 19777,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 5,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "line": 2
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "machine": "M3",
+     "start": "02:30",
+     "sensor": "mold_temp_c",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 2,
+     "start": "02:30",
+     "machine": "M3",
+     "end": "03:00",
+     "sensor": "mold_temp_c"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "end": "03:00",
+     "machine": "M3",
+     "line": 2,
+     "start": "02:30",
+     "sensor": "cv_position_pct"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "coolant_flow_lpm",
+     "start": "02:30",
+     "machine": "M3",
+     "line": 2,
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "machine": "M3",
+     "sensor": "coolant_inlet_temp_c",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "machine": "M3",
+     "sensor": "mold_temp_ref_c",
+     "end": "03:00",
+     "line": 2
+    }
+   ]
+  ],
+  "elapsed_s": 76.8,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "114% of baseline"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Coolant inlet temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "3 independent signals agree · 1 alternative ruled out",
+   "cited_evidence": [
+    3,
+    5,
+    6
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover log at 02:30 noted no parameter changes and was not the cause."
+    }
+   ],
+   "evidence_lines": [
+    "Mold temperature: 213.6 °C — Above SOP 4.2 limit of 205 °C since 02:54",
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41"
+   ],
+   "recommended_actions": [
+    "Manually open cooling valve CV-2 per SOP 4.2.",
+    "Inspect and repair the CV-2 valve actuator per SOP 4.1.",
+    "Restart Line 2 only after mold temperature falls below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1 — Mold cooling circuit",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 3,
+   "retries": 1,
+   "input_tokens": 11973,
+   "output_tokens": 579,
+   "thinking_tokens": 2032,
+   "cached_tokens": 0,
+   "total_tokens": 14584,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 6,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "line": 2
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "line": 2
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M3",
+     "sensor": "mold_temp_c",
+     "end": "03:00",
+     "start": "02:30",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "machine": "M3",
+     "sensor": "cv_position_pct",
+     "line": 2,
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "line": 2,
+     "end": "03:00",
+     "sensor": "coolant_flow_lpm",
+     "machine": "M3"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "sensor": "coolant_inlet_temp_c",
+     "machine": "M3",
+     "end": "03:00",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "end": "03:00",
+     "machine": "M3",
+     "sensor": "mold_temp_ref_c",
+     "start": "02:30"
+    }
+   ]
+  ],
+  "elapsed_s": 33.3,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "114% of baseline"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Coolant inlet temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "4 independent signals agree · 3 alternatives ruled out",
+   "cited_evidence": [
+    1,
+    3,
+    4,
+    5
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift B handover at 02:30 involved no parameter changes, and valve command remained unchanged at 80%."
+    },
+    {
+     "evidence_id": 6,
+     "text": "Coolant inlet temperature stayed between 17.5 °C and 18.5 °C, ruling out chiller failure per SOP 4.1."
+    },
+    {
+     "evidence_id": 7,
+     "text": "Reference temperature probe matched the control sensor within 1 °C, ruling out sensor drift per SOP 4.7."
+    }
+   ],
+   "evidence_lines": [
+    "Alarm events: Over-temperature — M3 alarm at 03:00:12 · line stopped · 2 alarms in window",
+    "Mold temperature vs. baseline: 114% of baseline since 02:47",
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41"
+   ],
+   "recommended_actions": [
+    "Manually open cooling valve CV-2 per SOP 4.2.",
+    "Inspect and service the CV-2 actuator per SOP 4.1.",
+    "Confirm coolant flow returns to 34–50 L/min before restarting per SOP 4.1.",
+    "Restart Line 2 only after mold temperature falls below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1 — Mold cooling circuit",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 0,
+   "input_tokens": 17747,
+   "output_tokens": 637,
+   "thinking_tokens": 2942,
+   "cached_tokens": 3078,
+   "total_tokens": 21326,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 7,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "line": 2,
+     "end": "03:01"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "line": 2,
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "mold_temp_c",
+     "start": "02:30",
+     "line": 2,
+     "end": "03:00",
+     "machine": "M3"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "line": 2,
+     "sensor": "cv_position_pct",
+     "machine": "M3"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "line": 2,
+     "end": "03:00",
+     "start": "02:30",
+     "sensor": "coolant_flow_lpm"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "line": 2,
+     "sensor": "coolant_inlet_temp_c",
+     "machine": "M3",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "sensor": "mold_temp_ref_c",
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 2,
+     "start": "02:30",
+     "sensor": "cv_position_pct",
+     "machine": "M3",
+     "end": "03:00"
+    }
+   ]
+  ],
+  "elapsed_s": 84.8,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Coolant inlet temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Cooling valve CV-2 position",
+     "result": "25% of baseline"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "3 independent signals agree · 3 alternatives ruled out",
+   "cited_evidence": [
+    4,
+    5,
+    8
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover at 02:30 reported no parameter changes; CV command remained constant at 80%."
+    },
+    {
+     "evidence_id": 6,
+     "text": "Coolant inlet temperature was stable at 17.5–18.5 °C, ruling out chiller supply failure per SOP 4.1."
+    },
+    {
+     "evidence_id": 7,
+     "text": "Mold reference temperature tracked control temperature closely, ruling out sensor drift per SOP 4.7."
+    }
+   ],
+   "evidence_lines": [
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41",
+    "Cooling valve CV-2 position vs. baseline: 25% of baseline since 02:41"
+   ],
+   "recommended_actions": [
+    "Open cooling valve CV-2 manually to restore coolant flow per SOP 4.2.",
+    "Inspect and service the CV-2 valve actuator per SOP 4.1 and SOP 4.2.",
+    "Restart Line 2 only after mold temperature drops below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1 — Mold cooling circuit",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 0,
+   "input_tokens": 24304,
+   "output_tokens": 664,
+   "thinking_tokens": 2611,
+   "cached_tokens": 0,
+   "total_tokens": 27579,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 8,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "end": "03:00",
+     "line": 2,
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "line": 2,
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "line": 2,
+     "sensor": "mold_temp_c",
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "machine": "M3",
+     "end": "03:00",
+     "start": "02:30",
+     "sensor": "cv_position_pct"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "sensor": "coolant_flow_lpm",
+     "machine": "M3",
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "sensor": "mold_temp_ref_c",
+     "start": "02:30",
+     "machine": "M3",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 2,
+     "end": "03:00",
+     "start": "02:30",
+     "machine": "M3",
+     "sensor": "cv_position_pct"
+    }
+   ]
+  ],
+  "elapsed_s": 167.0,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Cooling valve CV-2 position",
+     "result": "25% of baseline"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "3 independent signals agree · 1 alternative ruled out",
+   "cited_evidence": [
+    4,
+    5,
+    7
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover at 02:30 involved no parameter changes and preceded the drop at 02:41."
+    }
+   ],
+   "evidence_lines": [
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41",
+    "Cooling valve CV-2 position vs. baseline: 25% of baseline since 02:41"
+   ],
+   "recommended_actions": [
+    "Manually open cooling valve CV-2 to restore coolant flow per SOP 4.2.",
+    "Inspect the CV-2 valve actuator and linkage for mechanical binding.",
+    "Do not restart Line 2 until mold temperature drops below 205 °C per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1 — Mold cooling circuit",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 3,
+   "input_tokens": 17653,
+   "output_tokens": 529,
+   "thinking_tokens": 1749,
+   "cached_tokens": 3071,
+   "total_tokens": 19931,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 9,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "line": 2,
+     "end": "03:01"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "start": "02:30",
+     "line": 2,
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "mold_temp_c",
+     "line": 2,
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "machine": "M3",
+     "sensor": "cv_position_pct",
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "line": 2,
+     "end": "03:00",
+     "sensor": "coolant_flow_lpm",
+     "machine": "M3",
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "coolant_inlet_temp_c",
+     "machine": "M3",
+     "start": "02:30",
+     "line": 2,
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "cv_position_pct",
+     "line": 2,
+     "end": "03:00",
+     "machine": "M3",
+     "start": "02:30"
+    }
+   ]
+  ],
+  "elapsed_s": 50.5,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Coolant inlet temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Cooling valve CV-2 position",
+     "result": "25% of baseline"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "5 independent signals agree · 1 alternative ruled out",
+   "cited_evidence": [
+    1,
+    3,
+    4,
+    5,
+    7
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift handover at 02:30 reported no parameter changes or open issues, ruling out setpoint changes or operator adjustments as the cause."
+    }
+   ],
+   "evidence_lines": [
+    "Alarm events: Over-temperature — M3 alarm at 03:00:12 · line stopped · 2 alarms in window",
+    "Mold temperature: 213.6 °C — Above SOP 4.2 limit of 205 °C since 02:54",
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41",
+    "Cooling valve CV-2 position vs. baseline: 25% of baseline since 02:41"
+   ],
+   "recommended_actions": [
+    "Manually open cooling valve CV-2 per SOP 4.2.",
+    "Inspect and repair the CV-2 valve actuator per SOP 4.1.",
+    "Confirm mold temperature drops below 205 °C before restarting Line 2 per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1 — Mold cooling circuit",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 0,
+   "input_tokens": 17602,
+   "output_tokens": 537,
+   "thinking_tokens": 2406,
+   "cached_tokens": 0,
+   "total_tokens": 20545,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "R01",
+  "run": 10,
+  "status": "root_cause",
+  "answer": "cv_valve_stuck_closed",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "line": 2,
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "start": "02:30",
+     "line": 2,
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "end": "03:00",
+     "machine": "M3",
+     "start": "02:30",
+     "sensor": "mold_temp_c",
+     "line": 2
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "sensor": "cv_position_pct",
+     "start": "02:30",
+     "line": 2,
+     "machine": "M3",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "machine": "M3",
+     "sensor": "coolant_flow_lpm",
+     "line": 2,
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_sensor_window",
+    {
+     "start": "02:30",
+     "line": 2,
+     "machine": "M3",
+     "sensor": "mold_temp_ref_c",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 2,
+     "sensor": "cv_position_pct",
+     "start": "02:30",
+     "end": "03:00",
+     "machine": "M3"
+    }
+   ]
+  ],
+  "elapsed_s": 39.4,
+  "conclusion": {
+   "line": 2,
+   "machine": "M3",
+   "machine_label": "M3 Molding",
+   "detected": "03:00",
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "2 in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Mold temperature",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Cooling valve CV-2 position",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Coolant flow",
+     "result": "below limit"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Mold temperature (reference probe)",
+     "result": "above limit"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Cooling valve CV-2 position",
+     "result": "25% of baseline"
+    }
+   ],
+   "status": "root_cause",
+   "root_cause": "Cooling valve CV-2 stuck at 20% open",
+   "root_cause_key": "cv_valve_stuck_closed",
+   "confidence": "High",
+   "confidence_reason": "5 independent signals agree · 1 alternative ruled out",
+   "cited_evidence": [
+    1,
+    3,
+    4,
+    5,
+    7
+   ],
+   "ruled_out": [
+    {
+     "evidence_id": 2,
+     "text": "Shift B handover at 02:30 noted no parameter changes; valve position deviated independently at 02:41."
+    }
+   ],
+   "evidence_lines": [
+    "Alarm events: Over-temperature — M3 alarm at 03:00:12 · line stopped · 2 alarms in window",
+    "Mold temperature: 213.6 °C — Above SOP 4.2 limit of 205 °C since 02:54",
+    "Cooling valve CV-2 position: 19.7% — Below normal range since 02:41 · commanded 80%",
+    "Coolant flow: 16.7 L/min — Below SOP 4.1 limit of 34 L/min since 02:41",
+    "Cooling valve CV-2 position vs. baseline: 25% of baseline since 02:41"
+   ],
+   "recommended_actions": [
+    "Open cooling valve CV-2 manually to restore coolant flow per SOP 4.2.",
+    "Inspect and service the CV-2 valve actuator per SOP 4.1.",
+    "Verify mold temperature cools below 205 °C before restarting Line 2 per SOP 4.2."
+   ],
+   "sop_reference": "SOP 4.1 — Mold cooling circuit",
+   "priority": "High"
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 1,
+   "input_tokens": 16166,
+   "output_tokens": 536,
+   "thinking_tokens": 2147,
+   "cached_tokens": 3075,
+   "total_tokens": 18849,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 1,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "line": 1
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "end": "03:00",
+     "machine": "M4",
+     "sensor": "reject_rate_pct",
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "sensor": "mold_temp_c",
+     "end": "03:00",
+     "start": "02:30",
+     "machine": "M3"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "machine": "M1",
+     "start": "02:30",
+     "sensor": "feed_rate_kgph",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "hydraulic_pressure_bar",
+     "line": 1,
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "dryer_temp_c",
+     "start": "02:30",
+     "line": 1,
+     "machine": "M2"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "coolant_flow_lpm",
+     "line": 1,
+     "start": "02:30",
+     "machine": "M3"
+    }
+   ]
+  ],
+  "elapsed_s": 55.9,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 0,
+   "input_tokens": 19672,
+   "output_tokens": 560,
+   "thinking_tokens": 3568,
+   "cached_tokens": 0,
+   "total_tokens": 23800,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 2,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "line": 1,
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00",
+     "machine": "M4",
+     "sensor": "reject_rate_pct"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "mold_temp_c",
+     "line": 1,
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M1",
+     "start": "02:30",
+     "sensor": "feed_rate_kgph",
+     "end": "03:00",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "dryer_temp_c",
+     "machine": "M2",
+     "start": "02:30",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30",
+     "sensor": "hydraulic_pressure_bar",
+     "machine": "M3"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M3",
+     "sensor": "coolant_flow_lpm",
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1
+    }
+   ]
+  ],
+  "elapsed_s": 102.7,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 3,
+   "input_tokens": 18164,
+   "output_tokens": 575,
+   "thinking_tokens": 2852,
+   "cached_tokens": 3072,
+   "total_tokens": 21591,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 3,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "reject_rate_pct",
+     "line": 1,
+     "machine": "M4",
+     "end": "03:00",
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "start": "02:30",
+     "machine": "M3",
+     "sensor": "mold_temp_c",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "feed_rate_kgph",
+     "line": 1,
+     "end": "03:00",
+     "machine": "M1",
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "end": "03:00",
+     "start": "02:30",
+     "machine": "M3",
+     "sensor": "hydraulic_pressure_bar"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "line": 1,
+     "sensor": "dryer_temp_c",
+     "machine": "M2",
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "end": "03:00",
+     "machine": "M3",
+     "start": "02:30",
+     "sensor": "coolant_flow_lpm"
+    }
+   ]
+  ],
+  "elapsed_s": 158.4,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 3,
+   "input_tokens": 19082,
+   "output_tokens": 523,
+   "thinking_tokens": 2181,
+   "cached_tokens": 0,
+   "total_tokens": 21786,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 4,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "line": 1
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "reject_rate_pct",
+     "line": 1,
+     "start": "02:30",
+     "machine": "M4"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "mold_temp_c",
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M1",
+     "line": 1,
+     "start": "02:30",
+     "sensor": "feed_rate_kgph",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "hydraulic_pressure_bar",
+     "line": 1,
+     "start": "02:30",
+     "machine": "M3"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "start": "02:30",
+     "machine": "M2",
+     "sensor": "dryer_temp_c",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "sensor": "coolant_flow_lpm",
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ]
+  ],
+  "elapsed_s": 49.1,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 0,
+   "input_tokens": 18285,
+   "output_tokens": 557,
+   "thinking_tokens": 2069,
+   "cached_tokens": 0,
+   "total_tokens": 20911,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 5,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "line": 1,
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "sensor": "reject_rate_pct",
+     "line": 1,
+     "machine": "M4"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M3",
+     "sensor": "mold_temp_c",
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "feed_rate_kgph",
+     "start": "02:30",
+     "machine": "M1",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "machine": "M3",
+     "start": "02:30",
+     "sensor": "hydraulic_pressure_bar",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "machine": "M2",
+     "end": "03:00",
+     "start": "02:30",
+     "sensor": "dryer_temp_c"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "start": "02:30",
+     "sensor": "coolant_flow_lpm",
+     "end": "03:00",
+     "machine": "M3"
+    }
+   ]
+  ],
+  "elapsed_s": 130.1,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 2,
+   "input_tokens": 18401,
+   "output_tokens": 585,
+   "thinking_tokens": 4308,
+   "cached_tokens": 3083,
+   "total_tokens": 23294,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 6,
+  "status": "failed",
+  "answer": "failed",
+  "error": "TimeoutError: Investigation exceeded its time budget",
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "end": "03:00",
+     "machine": "M4",
+     "sensor": "reject_rate_pct",
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "end": "03:00",
+     "start": "02:30",
+     "machine": "M3",
+     "sensor": "mold_temp_c"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "start": "02:30",
+     "sensor": "hydraulic_pressure_bar",
+     "end": "03:00",
+     "machine": "M3",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "machine": "M2",
+     "start": "02:30",
+     "line": 1,
+     "sensor": "dryer_temp_c"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "feed_rate_kgph",
+     "end": "03:00",
+     "machine": "M1",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "start": "02:30",
+     "machine": "M3",
+     "end": "03:00",
+     "sensor": "coolant_flow_lpm",
+     "line": 1
+    }
+   ]
+  ],
+  "elapsed_s": 264.8,
+  "conclusion": {},
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 4,
+   "input_tokens": 18639,
+   "output_tokens": 523,
+   "thinking_tokens": 2336,
+   "cached_tokens": 3104,
+   "total_tokens": 21498,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 7,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "end": "03:00",
+     "line": 1
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M4",
+     "line": 1,
+     "start": "02:30",
+     "end": "03:00",
+     "sensor": "reject_rate_pct"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "mold_temp_c",
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00",
+     "machine": "M3"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "start": "02:30",
+     "machine": "M1",
+     "end": "03:00",
+     "sensor": "feed_rate_kgph",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "dryer_temp_c",
+     "end": "03:00",
+     "start": "02:30",
+     "machine": "M2",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "start": "02:30",
+     "sensor": "hydraulic_pressure_bar",
+     "machine": "M3",
+     "line": 1,
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00",
+     "sensor": "coolant_flow_lpm",
+     "machine": "M3"
+    }
+   ]
+  ],
+  "elapsed_s": 170.0,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 2,
+   "input_tokens": 18128,
+   "output_tokens": 546,
+   "thinking_tokens": 1483,
+   "cached_tokens": 3075,
+   "total_tokens": 20157,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 8,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "reject_rate_pct",
+     "machine": "M4",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M3",
+     "start": "02:30",
+     "end": "03:00",
+     "line": 1,
+     "sensor": "mold_temp_c"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M1",
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00",
+     "sensor": "feed_rate_kgph"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M2",
+     "start": "02:30",
+     "end": "03:00",
+     "sensor": "dryer_temp_c",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M3",
+     "sensor": "hydraulic_pressure_bar",
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "machine": "M3",
+     "start": "02:30",
+     "sensor": "coolant_flow_lpm",
+     "end": "03:00"
+    }
+   ]
+  ],
+  "elapsed_s": 162.8,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 2,
+   "input_tokens": 14578,
+   "output_tokens": 525,
+   "thinking_tokens": 2048,
+   "cached_tokens": 0,
+   "total_tokens": 17151,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 9,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "line": 1,
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M4",
+     "start": "02:30",
+     "sensor": "reject_rate_pct",
+     "end": "03:00",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "sensor": "mold_temp_c",
+     "line": 1,
+     "machine": "M3",
+     "start": "02:30"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M1",
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1,
+     "sensor": "feed_rate_kgph"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "machine": "M2",
+     "sensor": "dryer_temp_c",
+     "line": 1,
+     "start": "02:30",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "coolant_flow_lpm",
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1,
+     "machine": "M3"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "hydraulic_pressure_bar",
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30",
+     "machine": "M3"
+    }
+   ]
+  ],
+  "elapsed_s": 201.2,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 4,
+   "retries": 4,
+   "input_tokens": 13538,
+   "output_tokens": 549,
+   "thinking_tokens": 4128,
+   "cached_tokens": 0,
+   "total_tokens": 18215,
+   "turns_without_usage": 0
+  }
+ },
+ {
+  "scenario": "N01",
+  "run": 10,
+  "status": "insufficient_evidence",
+  "answer": "insufficient_evidence",
+  "error": null,
+  "calls": [
+   [
+    "get_alarm_events",
+    {
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00"
+    }
+   ],
+   [
+    "get_shift_log",
+    {
+     "end": "03:00",
+     "start": "02:30",
+     "line": 1
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "machine": "M4",
+     "start": "02:30",
+     "sensor": "reject_rate_pct",
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "mold_temp_c",
+     "line": 1,
+     "end": "03:00",
+     "start": "02:30",
+     "machine": "M3"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "feed_rate_kgph",
+     "machine": "M1",
+     "start": "02:30",
+     "line": 1,
+     "end": "03:00"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "end": "03:00",
+     "line": 1,
+     "start": "02:30",
+     "sensor": "hydraulic_pressure_bar",
+     "machine": "M3"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "line": 1,
+     "start": "02:30",
+     "machine": "M2",
+     "end": "03:00",
+     "sensor": "dryer_temp_c"
+    }
+   ],
+   [
+    "compare_to_baseline",
+    {
+     "sensor": "coolant_flow_lpm",
+     "line": 1,
+     "end": "03:00",
+     "machine": "M3",
+     "start": "02:30"
+    }
+   ]
+  ],
+  "elapsed_s": 135.6,
+  "conclusion": {
+   "line": 1,
+   "machine": null,
+   "machine_label": null,
+   "detected": null,
+   "checked": [
+    {
+     "evidence_id": 1,
+     "name": "Alarm events",
+     "result": "none in window"
+    },
+    {
+     "evidence_id": 2,
+     "name": "Shift & maintenance log",
+     "result": "no changes"
+    },
+    {
+     "evidence_id": 3,
+     "name": "Reject rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 4,
+     "name": "Mold temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 5,
+     "name": "Feed rate",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 6,
+     "name": "Hydraulic pressure",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 7,
+     "name": "Dryer temperature",
+     "result": "within normal range"
+    },
+    {
+     "evidence_id": 8,
+     "name": "Coolant flow",
+     "result": "within normal range"
+    }
+   ],
+   "status": "insufficient_evidence",
+   "note": null,
+   "next_step": "Manual inspection of Line 1 by the shift supervisor."
+  },
+  "usage": {
+   "applicable": true,
+   "note": null,
+   "turns": 5,
+   "retries": 2,
+   "input_tokens": 18894,
+   "output_tokens": 528,
+   "thinking_tokens": 2985,
+   "cached_tokens": 0,
+   "total_tokens": 22407,
+   "turns_without_usage": 0
+  }
+ }
+]

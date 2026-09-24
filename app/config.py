@@ -56,7 +56,7 @@ class Settings:
             gcp_project=_env("GOOGLE_CLOUD_PROJECT", ""),
             bq_dataset=_env("BQ_DATASET", "linesleuth_demo"),
             agent_mode=_env("AGENT_MODE", "gemini"),
-            gemini_model=_env("GEMINI_MODEL", "gemini-3-flash-preview"),
+            gemini_model=_env("GEMINI_MODEL", "gemini-2.5-flash"),
             gemini_location=_env("GOOGLE_CLOUD_LOCATION", "global"),
             gemini_temperature=float(_env("GEMINI_TEMPERATURE", "0")),
             max_agent_turns=int(_env("MAX_AGENT_TURNS", "10")),
