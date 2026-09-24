@@ -1,4 +1,6 @@
-# 部署：Cloud Run（老闆照做，Eddie 沒有實際執行過任何 gcloud 指令）
+# 部署：Cloud Run
+
+> **2026-09-24 已實際部署**：專案 `ailinesleuth-2026`、服務 `linesleuth`（`asia-southeast1`），網址 https://linesleuth-547147056278.asia-southeast1.run.app 。依會議決議先用 `QUERY_BACKEND=local`（映像內建 DuckDB）、`--min-instances 0`（10/16 前不常駐）；BigQuery 尚未切換。健康檢查請用 `/health`（Cloud Run 保留 `/healthz`，會回 404）。實測結果見 `docs/qa/runs/README.md`。
 
 - 建立：2026-09-24，Eddie（工程）
 - 以下指令會**建立雲端資源、可能產生費用**，請確認 Felix 的預算上限拍板後再跑。

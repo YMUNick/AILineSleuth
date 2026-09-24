@@ -21,7 +21,7 @@ import os
 
 from playwright.sync_api import sync_playwright
 
-BASE = "http://localhost:8000"
+BASE = "http://localhost:8000"  # set from --base in main()
 LAYOUT_PROBE = """() => {
   const r = {};
   const doc = document.documentElement;
@@ -129,7 +129,10 @@ def main():
     ap.add_argument("--sizes", default="1920x1080")
     ap.add_argument("--qa", action="store_true", help="prefix files with the size, skip phone page")
     ap.add_argument("--hide-fixture-banner", action="store_true")
+    ap.add_argument("--base", default="http://localhost:8000", help="app URL, e.g. the Cloud Run service URL")
     a = ap.parse_args()
+    global BASE
+    BASE = a.base.rstrip("/")
     os.makedirs(a.out, exist_ok=True)
     sizes = [tuple(int(v) for v in s.split("x")) for s in a.sizes.split(",")]
     with sync_playwright() as p:

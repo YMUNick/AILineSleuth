@@ -12,3 +12,8 @@ def test_qr_svg_is_standalone_image():
     assert r.headers["content-type"].startswith("image/svg+xml")
     head = r.text[: r.text.index(">") + 1]
     assert 'xmlns="http://www.w3.org/2000/svg"' in head
+
+
+def test_health_alias_for_cloud_run():
+    client = TestClient(app)
+    assert client.get("/health").json() == {"ok": True}

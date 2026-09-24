@@ -135,7 +135,8 @@ def work_order_page(wo_id: str) -> str:
     return _page("wo.html")
 
 
-@app.get("/healthz")
+@app.get("/health")
+@app.get("/healthz")  # Cloud Run reserves /healthz (404 from the front end); use /health there
 def healthz() -> dict:
     return {"ok": True}
 

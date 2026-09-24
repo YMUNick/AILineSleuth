@@ -84,9 +84,9 @@ function shot(s, file, x, y, w, h, label) {
   }
 }
 
-// Screenshots come from offline-fixture mode until Gemini is connected; say so on the slide.
+// Screenshots are real Gemini runs on the deployed prototype, but the plant data is simulated; say so on the slide.
 function draftTag(s) {
-  s.addText("DRAFT · offline-mode capture, re-shoot in Gemini mode", {
+  s.addText("Live prototype (Cloud Run, gemini-2.5-flash) · simulated plant data", {
     x: W - M - 5.2, y: 0.45, w: 5.2, h: 0.3, align: "right", fontFace: BODY, fontSize: 10, italic: true,
     color: C.muted, margin: 0, isTextBox: true,
   });

@@ -14,3 +14,18 @@ R01 input 5,686 / output 284 / thinking 1,749; N01 input 15,710 / output 277 / t
 
 An earlier unpaced run on gemini-3.8-flash (not kept) had every completed investigation correct
 but 10 of 20 failed on 429 / timeouts. Not yet covered: BigQuery backend, Cloud Run, phone QR scan.
+
+## Cloud Run smoke test (2026-09-24)
+
+Service `linesleuth`, region `asia-southeast1`, URL https://linesleuth-547147056278.asia-southeast1.run.app,
+`AGENT_MODE=gemini`, `GEMINI_MODEL=gemini-2.5-flash`, `QUERY_BACKEND=local` (DuckDB baked into the image; BigQuery not switched on yet),
+min-instances 0 / max-instances 1, presenter key in Secret Manager.
+
+| Scenario | Result | Elapsed | Tokens (total) |
+|---|---|---|---|
+| R01 | root cause `cv_valve_stuck_closed`, confidence High | 12.3 s | 7,719 |
+| N01 | insufficient evidence | 11.4 s | 17,310 |
+
+Deck screenshots in `docs/pitch/deck/assets/` were re-captured from this deployment (real Gemini, no fixture banner).
+Found: Cloud Run's front end reserves `/healthz` (returns 404); `/health` added as the health route.
+Not yet: phone QR scan on a real device, BigQuery backend, X-Forwarded-For spoof check (deploy.md 5.1).
